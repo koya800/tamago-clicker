@@ -452,6 +452,12 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
 
 
 
+
+
+
+
+
+
 const MEMO={
   'chibi_dragon':['ガオッ！（小さいけど本気だよ）','たまごとご主人さま'],
   'chick':['ぴよぴよ！','あたたかいひざのうえ'],
@@ -622,7 +628,7 @@ function playBuf(buf){
     g.connect(ctx.destination);
     const now=ctx.currentTime;
     g.gain.setValueAtTime(0,now);
-    g.gain.linearRampToValueAtTime(seVol,now+0.005); // 5msでfade in
+    g.gain.linearRampToValueAtTime(seVol,now+0.02); // 20msでfade in（ブツッ防止）
     g.gain.setValueAtTime(seVol,now+buf.duration-0.02);
     g.gain.linearRampToValueAtTime(0,now+buf.duration); // 最後20msでfade out
     _activeSounds++;
@@ -725,21 +731,21 @@ const ET=[
   {id:'ra',icon:'🌈',name:'にじ卵',      unlockAt:3000, tb:300, th:2500, col:['#ffeef8','#ff90d0','#ff40a0'], def:40000},
   {id:'sp',icon:'🚀',name:'うちゅう卵',  unlockAt:7000, tb:800, th:4000, col:['#eef4ff','#90c8ff','#4090ff'], def:150000},
 ];const CR=[
-  {id:'chibi_dragon',icon:'🐲',name:'ちびドラゴン',r:'U',w:0,eps:0.3,atk:1,eggs:['n','g','cr','fi','ic','ga','ra','sp']},
-  {id:'chick',   icon:'🐣',name:'ひよこ',        r:'C',w:70, eps:0.05, atk:0.15, eggs:['n','g']},
-  {id:'duck',    icon:'🦆',name:'あひる',         r:'C',w:62, eps:0.13, atk:0.025, eggs:['n','g']},
+  {id:'chibi_dragon',icon:'🐲',name:'ちびドラゴン',r:'U',w:0,eps:0.1,atk:1,eggs:['n','g','cr','fi','ic','ga','ra','sp']},
+  {id:'chick',   icon:'🐣',name:'ひよこ',        r:'C',w:70, eps:0.03, atk:0.15, eggs:['n','g']},
+  {id:'duck',    icon:'🦆',name:'あひる',         r:'C',w:62, eps:0.07, atk:0.025, eggs:['n','g']},
   {id:'pigeon',  icon:'🐦',name:'はと',          r:'C',w:56, eps:0.17, atk:0.025,eggs:['n','g']},
-  {id:'penguin', icon:'🐧',name:'ペンギン',       r:'C',w:50, eps:0.12, atk:0.15,eggs:['n','g','ic']},
-  {id:'bunny',   icon:'🐰',name:'うさぎ',         r:'C',w:60, eps:0.26, atk:0.025,eggs:['n','g','cr']},
-  {id:'hamster', icon:'🐹',name:'ハムスター',      r:'C',w:54, eps:0.3, atk:0.025,eggs:['n','g','cr']},
-  {id:'mouse',   icon:'🐭',name:'ねずみ',         r:'C',w:48, eps:0.20, atk:0.25,eggs:['n','g','cr']},
+  {id:'penguin', icon:'🐧',name:'ペンギン',       r:'C',w:50, eps:0.07, atk:0.15,eggs:['n','g','ic']},
+  {id:'bunny',   icon:'🐰',name:'うさぎ',         r:'C',w:60, eps:0.15, atk:0.025,eggs:['n','g','cr']},
+  {id:'hamster', icon:'🐹',name:'ハムスター',      r:'C',w:54, eps:0.18, atk:0.025,eggs:['n','g','cr']},
+  {id:'mouse',   icon:'🐭',name:'ねずみ',         r:'C',w:48, eps:0.12, atk:0.25,eggs:['n','g','cr']},
   {id:'lizard',  icon:'🦎',name:'トカゲ',         r:'C',w:46, eps:0.38, atk:0.025,eggs:['n','cr']},
   {id:'turtle',  icon:'🐢',name:'かめ',           r:'C',w:43, eps:0.42, atk:0.025,eggs:['n','cr']},
   {id:'snail',   icon:'🐌',name:'かたつむり',      r:'C',w:40, eps:0.46, atk:0.03,eggs:['n','cr']},
   {id:'alien',   icon:'👽',name:'エイリアン',      r:'C',w:45, eps:0.41, atk:0.075,eggs:['n','cr']},
   {id:'robot',   icon:'🤖',name:'ロボット',        r:'C',w:38, eps:0.5, atk:0.0875,eggs:['n','cr','fi']},
-  {id:'cat',     icon:'🐱',name:'ねこ',           r:'U',w:18, eps:1.0, atk:0.03,  eggs:['g','cr','fi']},
-  {id:'dog',     icon:'🐶',name:'いぬ',           r:'U',w:16, eps:1.3, atk:0.0375,  eggs:['g','cr','fi']},
+  {id:'cat',     icon:'🐱',name:'ねこ',           r:'U',w:18, eps:0.7, atk:0.03,  eggs:['g','cr','fi']},
+  {id:'dog',     icon:'🐶',name:'いぬ',           r:'U',w:16, eps:0.9, atk:0.0375,  eggs:['g','cr','fi']},
   {id:'raccoon', icon:'🦝',name:'アライグマ',      r:'U',w:16, eps:1.6, atk:0.25, eggs:['cr','fi']},
   {id:'panda',   icon:'🐼',name:'パンダ',          r:'U',w:14, eps:2.0, atk:0.5, eggs:['cr','fi']},
   {id:'koala',   icon:'🐨',name:'コアラ',          r:'U',w:13, eps:2.0, atk:0.03, eggs:['cr','fi']},
@@ -781,13 +787,13 @@ const ET=[
   {id:'swan',    icon:'🦢',name:'はくちょう',     r:'U',w:9, eps:1.6, atk:0.03, eggs:['g','cr','ic']},
   {id:'bat',     icon:'🦇',name:'こうもり',       r:'R',w:3,  eps:8, atk:0.03, eggs:['ga','ic']},
   {id:'scorpion',icon:'🦂',name:'サソリ',         r:'R',w:3,eps:9, atk:0.03, eggs:['fi','ga']},
-  {id:'crab',    icon:'🦀',name:'カニ',           r:'C',w:42, eps:0.33, atk:0.03,eggs:['cr','ic']},
+  {id:'crab',    icon:'🦀',name:'カニ',           r:'C',w:42, eps:0.20, atk:0.03,eggs:['cr','ic']},
   {id:'lobster', icon:'🦞',name:'ロブスター',     r:'U',w:10, eps:2.0, atk:0.03, eggs:['cr','fi','ic']},
   {id:'octopus', icon:'🐙',name:'タコ',           r:'U',w:13, eps:2.3, atk:0.025, eggs:['cr','ic']},
-  {id:'squid',   icon:'🦑',name:'イカ',           r:'C',w:44, eps:0.25, atk:0.03,eggs:['cr']},
+  {id:'squid',   icon:'🦑',name:'イカ',           r:'C',w:44, eps:0.15, atk:0.03,eggs:['cr']},
   {id:'mammoth', icon:'🦣',name:'マンモス',        r:'R',w:3,  eps:10, atk:0.2,eggs:['ic','ga']},
-  {id:'sloth',   icon:'🦥',name:'ナマケモノ',     r:'U',w:10, eps:1.0, atk:0.03, eggs:['g','cr']},
-  {id:'otter',   icon:'🦦',name:'カワウソ',       r:'U',w:14, eps:1.3, atk:0.03, eggs:['g','cr']},
+  {id:'sloth',   icon:'🦥',name:'ナマケモノ',     r:'U',w:10, eps:0.7, atk:0.03, eggs:['g','cr']},
+  {id:'otter',   icon:'🦦',name:'カワウソ',       r:'U',w:14, eps:0.9, atk:0.03, eggs:['g','cr']},
   {id:'hedgehog',icon:'🦔',name:'ハリネズミ',     r:'C',w:45, eps:0.42, atk:0.0375,eggs:['n','g']},
 
   // 超激レア（各卵1種、出現率激レア）
@@ -802,12 +808,12 @@ const ET=[
 
   // 各卵専用レア（出現率約1%）
   {id:'r_n',  icon:'🌺',name:'はなのせいれい',  r:'R',w:1.5,eps:8, atk:0.03,   eggs:['n']},
-  {id:'r_g',  icon:'🦋',name:'おうごんのちょうちょ',r:'R',w:1.0,eps:15, atk:0.1,  eggs:['g']},
+  {id:'r_g',  icon:'🦋',name:'おうごんのちょうちょ',r:'R',w:1.0,eps:5, atk:0.1,  eggs:['g']},
   {id:'r_cr', icon:'🔮',name:'クリスタルゴーレム',r:'R',w:0.9,eps:28, atk:0.025,  eggs:['cr']},
   {id:'r_fi', icon:'🌋',name:'ようがんのかみさま',r:'R',w:0.4,eps:55, atk:0.0375,  eggs:['fi']},
   {id:'r_ic', icon:'🧊',name:'こおりのせいれい',  r:'R',w:0.4,eps:100, atk:0.075, eggs:['ic']},
   {id:'r_ga', icon:'🌠',name:'ぎんがのこびと',    r:'R',w:0.1,eps:180, atk:0.03, eggs:['ga']},
-  {id:'r_ra', icon:'🦄',name:'にじのペガサス',    r:'R',w:0.02,eps:320, atk:0.05, eggs:['ra']},
+  {id:'r_ra', icon:'🦄',name:'にじのペガサス',    r:'R',w:0.02,eps:60, atk:0.05, eggs:['ra']},
   {id:'r_sp', icon:'👾',name:'うちゅうじん',      r:'R',w:0.004,eps:600, atk:0.1, eggs:['sp']},
 ];
 const UPG=[
@@ -1510,14 +1516,14 @@ function synBonus(){
 }
 // ===== シークレットキャラ =====
 const SECRET_CR=[
-  {id:'sc_midnight',icon:'🌙',name:'まよなかのけもの',r:'L',eps:3000,hint:'深夜3時〜4時にプレイ'},
-  {id:'sc_rainbow', icon:'🌈',name:'にじのちょうちょ',r:'L',eps:4000,hint:'全種コンプリート'},
-  {id:'sc_prestige',icon:'👑',name:'てんせいおうじ',  r:'L',eps:3500,hint:'転生5回以上'},
-  {id:'sc_tap10k',  icon:'💫',name:'たぷたぷせいじん',r:'L',eps:2500,hint:'タップ1万回'},
-  {id:'sc_rich',    icon:'💰',name:'おかねのかみさま',r:'L',eps:5000,hint:'かけら100万個'},
-  {id:'sc_cosmos',  icon:'🪐',name:'うちゅうのこころ',r:'L',eps:6000,hint:'コスモスのかみ入手'},
-  {id:'sc_patient', icon:'🐢',name:'ゆっくりけんじゃ',r:'E',eps:1500,hint:'1時間放置'},
-  {id:'sc_veteran', icon:'👴',name:'ベテランたまごし',r:'L',eps:4000,hint:'転生10回以上'},
+  {id:'sc_midnight',icon:'🌙',name:'まよなかのけもの',r:'L',eps:20, hint:'深夜3時〜4時にプレイ'},
+  {id:'sc_rainbow', icon:'🌈',name:'にじのちょうちょ',r:'L',eps:30, hint:'全種コンプリート'},
+  {id:'sc_prestige',icon:'👑',name:'てんせいおうじ',  r:'L',eps:25, hint:'転生5回以上'},
+  {id:'sc_tap10k',  icon:'💫',name:'たぷたぷせいじん',r:'L',eps:15, hint:'タップ1万回'},
+  {id:'sc_rich',    icon:'💰',name:'おかねのかみさま',r:'L',eps:40, hint:'かけら100万個'},
+  {id:'sc_cosmos',  icon:'🪐',name:'うちゅうのこころ',r:'L',eps:50, hint:'コスモスのかみ入手'},
+  {id:'sc_patient', icon:'🐢',name:'ゆっくりけんじゃ',r:'E',eps:10, hint:'1時間放置'},
+  {id:'sc_veteran', icon:'👴',name:'ベテランたまごし',r:'L',eps:30, hint:'転生10回以上'},
 ];
 let secretFound={};
 function secretEps(){return SECRET_CR.filter(s=>secretFound[s.id]).reduce((a,s)=>a+s.eps,0);}
@@ -2285,6 +2291,15 @@ setInterval(()=>{
 },100);
 
 loadGame();
+// 音声バッファを事前初期化（最初のタップでブツッとならないように）
+setTimeout(()=>{
+  try{
+    const _ctx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:22050});
+    _ctx.suspend(); // 一旦サスペンド
+    audioCtx=_ctx;
+    initBufs(); // バッファを事前生成
+  }catch(e){}
+},500);
 // ちびドラゴンは最初から1匹
 if(!S.cr['chibi_dragon'])S.cr['chibi_dragon']=1;
 setTimeout(()=>{if(!tutDone)tutStart();},800);
@@ -2352,6 +2367,12 @@ function watchAd(type){
 }
 function removAds(){showN('🚫 近日公開予定です！');}
 function buyPack(n){showN('🛒 近日公開予定です！');}
+
+
+
+
+
+
 
 
 
