@@ -443,6 +443,15 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
 
 
 
+
+
+
+
+
+
+
+
+
 const MEMO={
   'chibi_dragon':['ガオッ！（小さいけど本気だよ）','たまごとご主人さま'],
   'chick':['ぴよぴよ！','あたたかいひざのうえ'],
@@ -716,14 +725,14 @@ const ET=[
   {id:'ra',icon:'🌈',name:'にじ卵',      unlockAt:3000, tb:300, th:2500, col:['#ffeef8','#ff90d0','#ff40a0'], def:40000},
   {id:'sp',icon:'🚀',name:'うちゅう卵',  unlockAt:7000, tb:800, th:4000, col:['#eef4ff','#90c8ff','#4090ff'], def:150000},
 ];const CR=[
-  {id:'chibi_dragon',icon:'🐲',name:'ちびドラゴン',r:'U',w:0,eps:1,atk:1,eggs:['n','g','cr','fi','ic','ga','ra','sp']},
-  {id:'chick',   icon:'🐣',name:'ひよこ',        r:'C',w:70, eps:0.09, atk:0.15, eggs:['n','g']},
+  {id:'chibi_dragon',icon:'🐲',name:'ちびドラゴン',r:'U',w:0,eps:0.3,atk:1,eggs:['n','g','cr','fi','ic','ga','ra','sp']},
+  {id:'chick',   icon:'🐣',name:'ひよこ',        r:'C',w:70, eps:0.05, atk:0.15, eggs:['n','g']},
   {id:'duck',    icon:'🦆',name:'あひる',         r:'C',w:62, eps:0.13, atk:0.025, eggs:['n','g']},
   {id:'pigeon',  icon:'🐦',name:'はと',          r:'C',w:56, eps:0.17, atk:0.025,eggs:['n','g']},
-  {id:'penguin', icon:'🐧',name:'ペンギン',       r:'C',w:50, eps:0.21, atk:0.15,eggs:['n','g','ic']},
+  {id:'penguin', icon:'🐧',name:'ペンギン',       r:'C',w:50, eps:0.12, atk:0.15,eggs:['n','g','ic']},
   {id:'bunny',   icon:'🐰',name:'うさぎ',         r:'C',w:60, eps:0.26, atk:0.025,eggs:['n','g','cr']},
   {id:'hamster', icon:'🐹',name:'ハムスター',      r:'C',w:54, eps:0.3, atk:0.025,eggs:['n','g','cr']},
-  {id:'mouse',   icon:'🐭',name:'ねずみ',         r:'C',w:48, eps:0.34, atk:0.25,eggs:['n','g','cr']},
+  {id:'mouse',   icon:'🐭',name:'ねずみ',         r:'C',w:48, eps:0.20, atk:0.25,eggs:['n','g','cr']},
   {id:'lizard',  icon:'🦎',name:'トカゲ',         r:'C',w:46, eps:0.38, atk:0.025,eggs:['n','cr']},
   {id:'turtle',  icon:'🐢',name:'かめ',           r:'C',w:43, eps:0.42, atk:0.025,eggs:['n','cr']},
   {id:'snail',   icon:'🐌',name:'かたつむり',      r:'C',w:40, eps:0.46, atk:0.03,eggs:['n','cr']},
@@ -907,8 +916,8 @@ const RN={C:'コモン',U:'アンコモン',R:'レア',E:'エピック',L:'レ�
 let S={eg:0,tp:1,bps:0,rm:1,tp2:0,pc:0,pc2:0,cu:{},_hatchCount:0,_bossCount:0,_recMaxCombo:0,_recMaxTap:0,_recFastHatch:null,_lastHatchTime:null,tpg:{n:0,g:0,cr:0,fi:0,ic:0,ga:0,ra:0,sp:0},ce:'n',cr:{},ub:{},ad:{},dd:'',combo:0,ct:0,lastAct:0};
 let curTab='main';
 const fmt=n=>n>=1e12?(n/1e12).toFixed(1)+'T':n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=100000?(n/1000).toFixed(0)+'K':Math.floor(n)+'';
-const tC=()=>Object.values(S.cr).reduce((a,b)=>a+b,0);
-const tK=()=>CR.filter(c=>(S.cr[c.id]||0)>0).length;
+const tC=()=>Object.entries(S.cr).filter(([k])=>k!=='chibi_dragon').reduce((a,[,b])=>a+b,0);
+const tK=()=>CR.filter(c=>c.id!=='chibi_dragon'&&(S.cr[c.id]||0)>0).length;
 const gE=()=>ET.find(e=>e.id===S.ce)||ET[0];
 const eps=()=>{
   let s=S.bps;
@@ -944,6 +953,9 @@ function sw(t){
 // ===== タップ =====
 function tap(ev){
   S.tp2++;sndTap();
+  // 夜間タップカウント（23時〜1時）
+  const _h=new Date().getHours();
+  if(_h===23||_h===0)_nightTapCount++;
   const eg=gE(),now=Date.now();
   const _comboTime=800+(S._coreComboTime||0);
   const _comboMax=20+(S._coreComboMax||0);
@@ -1015,6 +1027,8 @@ function hatch(eg,mode){
   for(const c of wa){r-=c.w;if(r<=0){ch=c;break;}}
   const prev=S.cr[ch.id]||0;
   S.cr[ch.id]=prev+1;
+  // 連続同キャラ孵化カウント（シャドウキャット用）
+  if(ch.id===_lastHatchId){_streakCount++;}else{_streakCount=1;_lastHatchId=ch.id;}
   if(ch.r==='L')sndLegend();
   else if(ch.r==='E')sndRare();
   else sndHatch();
@@ -1105,7 +1119,7 @@ function prestigeReq(){
   const count=[300,800,2000,5000,12000,30000][Math.min(S.pc,5)];
   return {kinds, count};
 }
-function calcC(){return Math.max(1,Math.floor(Math.pow(Math.max(tC()-2,0)/8+1,.85)));}
+function calcC(){return Math.max(1,Math.floor(Math.sqrt(Math.max(tC()-10,0)/20)));}
 function tryPrestige(){
   if(!confirm('転生しますか？\n生き物・強化はリセットされますが\nコア結晶'+calcC()+'個を取得します！\n（攻撃力もリセットされます）'))return;
   const c=calcC();
@@ -1302,8 +1316,11 @@ function render(){
     }
   }
   if(curTab==='book'){
-    document.getElementById('bp').textContent=tk+'/'+CR.length;
-    document.getElementById('bg').innerHTML=CR.map(c=>{
+    const _allCR2=[...CR,...BOSS_CR.filter(bc=>!CR.find(x=>x.id===bc.id)),...(typeof HIDDEN_CR!=='undefined'?HIDDEN_CR.filter(hc=>!CR.find(x=>x.id===hc.id)):[])];const _gotCR2=_allCR2.filter(c=>(S.cr[c.id]||0)>0).length;
+    document.getElementById('bp').textContent=_gotCR2+'/'+_allCR2.length;
+    // 図鑑：通常CR + BOSS_CR（激レア限定）+ HIDDEN_CR（隠し）を全表示
+    const _allCR=[...CR,...BOSS_CR.filter(bc=>!CR.find(x=>x.id===bc.id)),...(typeof HIDDEN_CR!=='undefined'?HIDDEN_CR.filter(hc=>!CR.find(x=>x.id===hc.id)):[])];
+    document.getElementById('bg').innerHTML=_allCR.map(c=>{
       const fd=!!(S.cr[c.id]);
       const onclick2=fd?'onclick="showCrModal(\''+c.id+'\')" style="cursor:pointer"':'onclick="showUnknownModal(\''+c.id+'\')" style="cursor:pointer"';return'<div class="bc'+(fd?' fd':'')+'" '+onclick2+'><div class="bi">'+(fd?c.icon:'❓')+'</div><div class="bn r'+c.r+'">'+(fd?c.name:'？？？')+'</div>'+(fd?'<div class="bq">'+(S.cr[c.id])+'匹</div>':'')+'<div style="font-size:8px;color:'+RC[c.r]+'">'+RN[c.r]+'</div></div>';
     }).join('');
@@ -1452,24 +1469,44 @@ function getCRRate(cr_id){
 }
 // ===== シナジー =====
 const SYNS=[
-  {name:'とりの群れ',   icon:'🐦', ids:['chick','duck','pigeon','penguin','flamingo','owl','parrot','swan'], need:3, bonus:1.025, desc:'とり系3種で毎秒+2.5%'},
-  {name:'もふもふ軍団', icon:'🐾', ids:['bunny','hamster','mouse','cat','dog','raccoon','panda','koala','sloth','otter','hedgehog'], need:4, bonus:1.04, desc:'もふもふ4種で毎秒+4%'},
-  {name:'しぜんのちから',icon:'🌿',ids:['lizard','turtle','snail','deer','elephant','whale','dolphin','kirin','mammoth'], need:4, bonus:1.05, desc:'自然4種で毎秒+5%'},
-  {name:'うみのなかま',  icon:'🌊', ids:['whale','shark','dolphin','kraken','crab','lobster','octopus','squid'], need:3, bonus:1.015, desc:'海3種で毎秒+3%'},
-  {name:'ハンターズ',    icon:'⚔', ids:['wolf','lion','tiger','shark','dragon','bat','scorpion'], need:3, bonus:1.05, desc:'肉食3種で毎秒+5%'},
-  {name:'まほうのいきもの',icon:'✨',ids:['fox','unicorn','wizard','shinryu','godbird','starbeing'], need:2, bonus:1.075, desc:'魔法2種で毎秒+7.5%'},
-  {name:'うちゅうのなかま',icon:'🚀',ids:['alien','robot','ufo','satellite','comet','blackhole','nebula','pulsar','cosmos'], need:4, bonus:1.06, desc:'宇宙4種で毎秒+6%'},
-  {name:'でんせつのいきもの',icon:'🔥',ids:['dragon','phoenix','griffin','kraken','trex','brachi'], need:2, bonus:1.10, desc:'伝説2種で毎秒+10%'},
-  {name:'ジャングルキング',icon:'🌴',ids:['monkey','lion','tiger','elephant','kirin','horse'], need:3, bonus:1.04, desc:'ジャングル3種で毎秒+4%'},
-  {name:'ねこいぬ',      icon:'🐱', ids:['cat','dog'], need:2, bonus:1.015, desc:'ねこ＋いぬで毎秒+1.5%'},
+  // ===== 序盤シナジー =====
+  {name:'ねこいぬ',        icon:'🐱', ids:['cat','dog'],                                   need:2, bonus:1.01, atk:1.01, desc:'ねこ＋いぬで毎秒+1% / 攻撃力+1%'},
+  {name:'とりの群れ',      icon:'🐦', ids:['chick','duck','pigeon','penguin','flamingo','owl','parrot','swan'], need:3, bonus:1.015, atk:1.02, desc:'とり系3種で毎秒+1.5% / 攻撃力+2%'},
+  {name:'もふもふ軍団',    icon:'🐾', ids:['bunny','hamster','mouse','cat','dog','raccoon','panda','koala','sloth','otter','hedgehog'], need:4, bonus:1.02, atk:1.02, desc:'もふもふ4種で毎秒+2% / 攻撃力+2%'},
+  {name:'ちびっこトリオ',  icon:'🐣', ids:['chick','bunny','hamster','mouse','hedgehog'],   need:3, bonus:1.015, atk:1.015, desc:'小動物3種で毎秒+1.5% / 攻撃力+1.5%'},
+  {name:'のろまコンビ',    icon:'🐌', ids:['snail','turtle','sloth'],                       need:2, bonus:1.02, atk:1.02, desc:'のんびり2種で毎秒+2% / 攻撃力+2%'},
+  // ===== 中盤シナジー =====
+  {name:'うみのなかま',    icon:'🌊', ids:['whale','shark','dolphin','kraken','crab','lobster','octopus','squid'], need:3, bonus:1.02, atk:1.02, desc:'海3種で毎秒+2% / 攻撃力+2%'},
+  {name:'しぜんのちから',  icon:'🌿', ids:['lizard','turtle','snail','deer','elephant','whale','dolphin','kirin','mammoth'], need:4, bonus:1.025, atk:1.03, desc:'自然4種で毎秒+2.5% / 攻撃力+3%'},
+  {name:'ジャングルキング',icon:'🌴', ids:['monkey','lion','tiger','elephant','kirin','horse'], need:3, bonus:1.02, atk:1.03, desc:'ジャングル3種で毎秒+2% / 攻撃力+3%'},
+  {name:'ハンターズ',      icon:'⚔', ids:['wolf','lion','tiger','shark','bat','scorpion'],  need:3, bonus:1.02, atk:1.04, desc:'肉食3種で毎秒+2% / 攻撃力+4%'},
+  {name:'むれのちから',    icon:'🐺', ids:['wolf','lion','tiger','horse','elephant'],        need:3, bonus:1.02, atk:1.03, desc:'群れ3種で毎秒+2% / 攻撃力+3%'},
+  {name:'たんさくたい',    icon:'🛸', ids:['alien','robot','ufo','satellite'],               need:3, bonus:1.02, atk:1.03, desc:'SF系3種で毎秒+2% / 攻撃力+3%'},
+  {name:'こおりのなかま',  icon:'❄', ids:['penguin','mammoth','kirin'],                    need:2, bonus:1.015, atk:1.02, desc:'氷系2種で毎秒+1.5% / 攻撃力+2%'},
+  {name:'夜の生き物',      icon:'🌙', ids:['bat','wolf','owl','fox','scorpion'],             need:3, bonus:1.02, atk:1.03, desc:'夜行性3種で毎秒+2% / 攻撃力+3%'},
+  // ===== 後半シナジー =====
+  {name:'まほうのいきもの',icon:'✨', ids:['fox','unicorn','wizard','shinryu','godbird','starbeing'], need:2, bonus:1.03, atk:1.05, desc:'魔法2種で毎秒+3% / 攻撃力+5%'},
+  {name:'うちゅうのなかま',icon:'🚀', ids:['alien','robot','ufo','satellite','comet','blackhole','nebula','pulsar','cosmos'], need:4, bonus:1.03, atk:1.04, desc:'宇宙4種で毎秒+3% / 攻撃力+4%'},
+  {name:'でんせつのいきもの',icon:'🔥',ids:['dragon','phoenix','griffin','kraken','trex','brachi'], need:2, bonus:1.04, atk:1.06, desc:'伝説2種で毎秒+4% / 攻撃力+6%'},
+  {name:'りゅうのいちぞく',icon:'🐉', ids:['dragon','shinryu','h_dragonlord'],              need:2, bonus:1.03, atk:1.05, desc:'龍族2種で毎秒+3% / 攻撃力+5%'},
+  {name:'ほのおのつばさ',  icon:'🔥', ids:['phoenix','h_phoenix2','godbird'],               need:2, bonus:1.03, atk:1.04, desc:'炎の翼2種で毎秒+3% / 攻撃力+4%'},
+  {name:'うちゅうのしんかい',icon:'🌌',ids:['blackhole','nebula','pulsar','cosmos','h_cosmos2'], need:3, bonus:1.04, atk:1.05, desc:'深宇宙3種で毎秒+4% / 攻撃力+5%'},
+  {name:'よるのおうさま',  icon:'🌕', ids:['h_moonwolf','wolf','bat','owl'],                need:3, bonus:1.03, atk:1.05, desc:'夜の王3種で毎秒+3% / 攻撃力+5%'},
 ];
 function getActiveSyns(){
   return SYNS.filter(s=>s.ids.filter(id=>(S.cr[id]||0)>=1).length>=s.need);
 }
-function synBonus(){
+function synAtkBonus(){
+  // アクティブなシナジーの攻撃力ボーナスを掛け合わせる
   const active=getActiveSyns();
   if(!active.length)return 1;
-  return active.reduce((mult,s)=>mult*s.bonus,1);
+  return active.reduce((mult,s)=>mult*(s.atk||1),1);
+}
+function synBonus(){
+  const active=getActiveSyns();
+  if(!active.length)return S._luckyAllSyn?1.5:1;
+  const base=active.reduce((mult,s)=>mult*s.bonus,1);
+  return S._luckyAllSyn?base*2:base;
 }
 // ===== シークレットキャラ =====
 const SECRET_CR=[
@@ -1642,7 +1679,22 @@ function addHatchCombo(){
 }
 
 const _EN={'n':'ふつう🥚','g':'きんいろ🌕','cr':'クリスタル💠','fi':'ほのお🔥','ic':'こおり❄','ga':'ぎんが🌌','ra':'にじ🌈','sp':'うちゅう🚀'};
-function showUnknownModal(id){const cr=CR.find(x=>x.id===id);if(!cr)return;const p=document.getElementById('hp');document.getElementById('hi').textContent='❓';document.getElementById('hn').textContent='？？？（'+RN[cr.r]+'）';document.getElementById('hr2').textContent='どの卵から出る？';document.getElementById('he').textContent=cr.eggs.map(e=>_EN[e]||e).join(' / ');const nb=document.getElementById('hp-new');if(nb)nb.style.display='none';p.style.display='block';clearTimeout(p._t);p._t=setTimeout(()=>p.style.display='none',3500);}
+function showUnknownModal(id){
+  // 通常未取得キャラ または 隠しキャラのうわさ
+  const allCR=[...CR,...BOSS_CR,...(typeof HIDDEN_CR!=='undefined'?HIDDEN_CR:[])];
+  const cr=allCR.find(x=>x.id===id);
+  if(!cr)return;
+  const p=document.getElementById('hp');
+  const isHidden=typeof HIDDEN_CR!=='undefined'&&HIDDEN_CR.find(x=>x.id===id);
+  document.getElementById('hi').textContent='❓';
+  document.getElementById('hn').textContent=isHidden?'謎の生き物…':'？？？（'+RN[cr.r]+'）';
+  document.getElementById('hr2').textContent=isHidden?'🔒 隠しキャラ':'どの卵から出る？';
+  document.getElementById('he').innerHTML=isHidden
+    ?'<i style="color:#9060c0">「'+cr.rumor+'」</i><br><span style="font-size:10px;color:#aaa">'+cr.desc+'</span>'
+    :cr.eggs.map(e=>_EN[e]||e).join(' / ');
+  const nb=document.getElementById('hp-new');if(nb)nb.style.display='none';
+  p.style.display='block';clearTimeout(p._t);p._t=setTimeout(()=>p.style.display='none',4000);
+}
 
 // 動物ウォーカー（ez全体を自由に歩く）
 function spawnWalker(){
@@ -1990,40 +2042,81 @@ function getPrestigeEgBonus(){
 
 // ===== 隠しキャラ（特定条件で解放） =====
 const HIDDEN_CR=[
-  // ふつう卵系
+  // ===== 序盤（ふつう卵・きんいろ卵） =====
   {id:'h_superchick', icon:'🐔', name:'おやどり',      r:'R', w:8,  eps:2.0,  atk:0.15, eggs:['n','g'],
-   req:{id:'chick',   cnt:30},  desc:'ひよこを30匹集めると解放！'},
+   req:{id:'chick',   cnt:30},  rumor:'ひよこをたくさん集めると…？',  desc:'ひよこを30匹集めると解放！'},
   {id:'h_kingpenguin',icon:'🐧', name:'皇帝ペンギン',   r:'R', w:8,  eps:2.5,  atk:0.18, eggs:['n','g','ic'],
-   req:{id:'penguin', cnt:30},  desc:'ペンギンを30匹集めると解放！'},
-  // きんいろ卵系
+   req:{id:'penguin', cnt:30},  rumor:'ペンギンの群れの中に王がいるらしい', desc:'ペンギンを30匹集めると解放！'},
+  {id:'h_bigbunny',   icon:'🐰', name:'ジャイアントうさぎ',r:'U',w:10, eps:1.8,  atk:0.08, eggs:['n','g','cr'],
+   req:{id:'bunny',   cnt:25},  rumor:'うさぎを集めると伝説のうさぎが現れるとか', desc:'うさぎを25匹集めると解放！'},
+  {id:'h_turtleking', icon:'🐢', name:'かめ仙人',       r:'R', w:7,  eps:3.5,  atk:0.1,  eggs:['n','cr'],
+   req:{id:'turtle',  cnt:40},  rumor:'かめは長生き…集め続けると仙人になるらしい', desc:'かめを40匹集めると解放！'},
+  // ===== 中盤（クリスタル・ほのお卵） =====
   {id:'h_bigcat',     icon:'🐱', name:'おおねこ',       r:'U', w:12, eps:3.0,  atk:0.12, eggs:['g','cr','fi'],
-   req:{id:'cat',     cnt:20},  desc:'ねこを20匹集めると解放！'},
+   req:{id:'cat',     cnt:20},  rumor:'ねこの集まりには主がいる', desc:'ねこを20匹集めると解放！'},
+  {id:'h_alphadog',   icon:'🐕', name:'アルファドッグ',  r:'U', w:10, eps:3.5,  atk:0.15, eggs:['g','cr','fi'],
+   req:{id:'dog',     cnt:20},  rumor:'いぬの群れにはリーダーがいるはず…', desc:'いぬを20匹集めると解放！'},
+  {id:'h_pandaking',  icon:'🐼', name:'パンダ大王',      r:'R', w:6,  eps:6.0,  atk:0.3,  eggs:['cr','fi','ic'],
+   req:{id:'panda',   cnt:30},  rumor:'パンダの王は竹林の奥に隠れているという', desc:'パンダを30匹集めると解放！'},
   {id:'h_wolfking',   icon:'🐺', name:'ウルフキング',    r:'E', w:2,  eps:8.0,  atk:0.6,  eggs:['fi','ic','ga'],
-   req:{id:'wolf',    cnt:50},  desc:'おおかみを50匹集めると解放！'},
-  // 中盤系
+   req:{id:'wolf',    cnt:50},  rumor:'おおかみの群れを率いる王が存在するらしい', desc:'おおかみを50匹集めると解放！'},
+  {id:'h_lionqueen',  icon:'🦁', name:'ライオンクイーン', r:'E', w:2,  eps:10.0, atk:0.7,  eggs:['fi','ic','ga'],
+   req:{id:'lion',    cnt:50},  rumor:'ライオンの群れには女王がいる…', desc:'ライオンを50匹集めると解放！'},
+  // ===== 中後半（こおり・ぎんが卵） =====
   {id:'h_dragonlord', icon:'🐉', name:'ドラゴンロード',  r:'E', w:2,  eps:15.0, atk:1.2,  eggs:['ga','ra','sp'],
-   req:{id:'dragon',  cnt:10},  desc:'ドラゴンを10匹集めると解放！'},
+   req:{id:'dragon',  cnt:10},  rumor:'ドラゴンの中に龍神がいるとうわさされている', desc:'ドラゴンを10匹集めると解放！'},
   {id:'h_phoenix2',   icon:'🔥', name:'不死鳥の王',     r:'E', w:2,  eps:12.0, atk:1.0,  eggs:['ra','sp'],
-   req:{id:'phoenix', cnt:10},  desc:'フェニックスを10匹集めると解放！'},
-  // レジェンド系
-  {id:'h_cosmos2',    icon:'🌌', name:'宇宙の覇者',     r:'L', w:0.02,eps:50.0,atk:5.0,  eggs:['sp'],
-   req:{id:'cosmos',  cnt:3},   desc:'コスモスを3匹集めると解放！'},
+   req:{id:'phoenix', cnt:10},  rumor:'フェニックスが10体集まると神になるらしい', desc:'フェニックスを10匹集めると解放！'},
+  {id:'h_kraken2',    icon:'🦑', name:'深海の覇者',      r:'E', w:2,  eps:18.0, atk:1.5,  eggs:['ic','ga','ra'],
+   req:{id:'kraken',  cnt:5},   rumor:'クラーケンの先には深海の王がいるとか…', desc:'クラーケンを5匹集めると解放！'},
+  {id:'h_unicornlord',icon:'🦄', name:'レインボーユニコーン',r:'E',w:2, eps:14.0, atk:1.1, eggs:['ic','ga'],
+   req:{id:'unicorn', cnt:20},  rumor:'ユニコーンを集めると虹色の王が現れるという', desc:'ユニコーンを20匹集めると解放！'},
+  // ===== 後半（にじ・うちゅう卵） =====
+  {id:'h_cosmos2',    icon:'🌌', name:'宇宙の覇者',     r:'L', w:0.015,eps:40.0,atk:3.0, eggs:['sp'],
+   req:{id:'cosmos',  cnt:3},   rumor:'コスモスのかみが3体…宇宙が開く', desc:'コスモスを3匹集めると解放！'},
+  {id:'h_wizardking', icon:'🧙', name:'大賢者',         r:'L', w:0.015,eps:35.0,atk:2.5, eggs:['ra','sp'],
+   req:{id:'wizard',  cnt:3},   rumor:'まほうつかいが3体揃うと大賢者が降臨するらしい', desc:'まほうつかいを3匹集めると解放！'},
+  // ===== 特殊条件の隠しキャラ =====
+  {id:'h_moonwolf',   icon:'🌕', name:'ムーンウルフ',   r:'E', w:2, eps:20.0, atk:2.0, eggs:['ic','ga','ra'],
+   req:{type:'time_night', cnt:100}, rumor:'満月の夜に出没するらしい…', desc:'夜中（23時〜1時）に100回タップで解放！'},
+  {id:'h_shadowcat',  icon:'👻', name:'シャドウキャット',r:'R', w:5, eps:8.0,  atk:0.5, eggs:['n','g','cr','fi'],
+   req:{type:'streak', cnt:5},  rumor:'同じ魂が重なると影が生まれる', desc:'同じキャラを連続5回孵化させると解放！'},
+  {id:'h_timewatcher', icon:'🕰️',name:'タイムウォッチャー',r:'E',w:2, eps:25.0, atk:1.8, eggs:['ga','ra','sp'],
+   req:{type:'playtime', cnt:30}, rumor:'長く見守った者だけが見える', desc:'累積プレイ時間30分で解放！'},
 ];
 
 let _hiddenUnlocked={}; // 解放済み隠しキャラ
+let _nightTapCount=0;   // 夜間タップ数（ムーンウルフ用）
+let _lastHatchId='';    // 直前の孵化キャラID
+let _streakCount=0;     // 連続同キャラ孵化数（シャドウキャット用）
+let _sessionStart=Date.now(); // セッション開始時間
 
 function checkHiddenChars(){
+  const now=new Date();
+  const hour=now.getHours();
+  const playMin=Math.floor((Date.now()-_sessionStart+(S._totalPlayMs||0))/60000);
   HIDDEN_CR.forEach(hc=>{
-    if(_hiddenUnlocked[hc.id])return; // 既に解放済み
-    const cnt=S.cr[hc.req.id]||0;
-    if(cnt>=hc.req.cnt){
+    if(_hiddenUnlocked[hc.id])return;
+    let unlocked=false;
+    const req=hc.req;
+    if(req.type==='time_night'){
+      // 夜間タップ数チェック
+      if(_nightTapCount>=(req.cnt||100))unlocked=true;
+    } else if(req.type==='streak'){
+      // 連続同キャラ孵化チェック
+      if(_streakCount>=(req.cnt||5))unlocked=true;
+    } else if(req.type==='playtime'){
+      // 累積プレイ時間チェック（分）
+      if(playMin>=(req.cnt||30))unlocked=true;
+    } else {
+      // 通常：特定キャラの所持数
+      if((S.cr[req.id]||0)>=(req.cnt||1))unlocked=true;
+    }
+    if(unlocked){
       _hiddenUnlocked[hc.id]=true;
-      // CRに追加（まだ追加されていない場合）
-      if(!CR.find(x=>x.id===hc.id)){
-        CR.push(hc);
-      }
+      if(!CR.find(x=>x.id===hc.id))CR.push(hc);
       showN('🔓 '+hc.icon+' 「'+hc.name+'」が解放された！');
-      S.cr[hc.id]=S.cr[hc.id]||0; // カウント初期化
+      S.cr[hc.id]=S.cr[hc.id]||0;
     }
   });
 }
@@ -2046,24 +2139,65 @@ const BOSS_CR=[
 // ===== 激レア卵システム =====
 let _superEggActive=false;
 
+// 激レア卵イベントの種類
+const LUCKY_EVENTS=[
+  // 序盤から出るイベント
+  {id:'eg_bonus',  minTC:0,   weight:50, label:'💰 かけらボーナス！',
+   apply:(tc)=>{const b=Math.max(50,Math.floor(tc*2));S.eg+=b;showN('✨ 激レア卵！かけら+'+fmt(b)+'個ゲット！');}},
+  // 中盤から出るイベント
+  {id:'rare_up',   minTC:30,  weight:30, label:'⭐ レア率アップ！',
+   apply:(tc)=>{S._luckyRmUp=true;setTimeout(()=>{S._luckyRmUp=false;},30000);showN('✨ 激レア卵！30秒間レア率3倍！');}},
+  {id:'atk_up',    minTC:50,  weight:25, label:'⚔️ 攻撃力アップ！',
+   apply:(tc)=>{S._luckyAtkUp=true;setTimeout(()=>{S._luckyAtkUp=false;},20000);showN('✨ 激レア卵！20秒間攻撃力2倍！');}},
+  {id:'eg_rush',   minTC:80,  weight:20, label:'💎 かけらラッシュ！',
+   apply:(tc)=>{const b=Math.max(200,Math.floor(tc*5));S.eg+=b;showN('✨ 激レア卵！かけら+'+fmt(b)+'！豪華！');}},
+  // 後半から出るイベント
+  {id:'hatch_free',minTC:200, weight:15, label:'🥚 即孵化！',
+   apply:(tc)=>{const eg=gE();S.tpg[eg.id]=(S.tpg[eg.id]||0)+eg.th*3;showN('✨ 激レア卵！孵化メーターが一気に進む！');}},
+  {id:'boss_char', minTC:300, weight:10, label:'👹 限定キャラ確定！',
+   apply:(tc)=>{_superEggActive=true;}}, // 限定キャラ排出フラグ
+  {id:'synergy',   minTC:500, weight:8,  label:'🌟 全シナジー発動！',
+   apply:(tc)=>{S._luckyAllSyn=true;setTimeout(()=>{S._luckyAllSyn=false;},15000);showN('✨ 激レア卵！15秒間全シナジー効果2倍！');}},
+];
+
+function getLuckyEvent(){
+  const tc=tC();
+  const pool=LUCKY_EVENTS.filter(e=>tc>=e.minTC);
+  if(!pool.length)return LUCKY_EVENTS[0];
+  const tot=pool.reduce((s,e)=>s+e.weight,0);
+  let r=Math.random()*tot;
+  for(const e of pool){r-=e.weight;if(r<=0)return e;}
+  return pool[pool.length-1];
+}
+
 function checkSuperEgg(){
-  // 孵化のたびに1%の確率で激レア卵が発動
   if(_superEggActive)return;
   if(Math.random()<0.0005){ // 0.05%
-    _superEggActive=true;
+    const ev=getLuckyEvent();
     const ew=document.getElementById('ew');
     if(ew){
       ew.style.filter='drop-shadow(0 0 20px gold) drop-shadow(0 0 40px #ffcc00)';
       ew.style.animation='superEggPulse 0.8s infinite alternate';
     }
-    showN('✨ 激レア卵が出現！次の孵化で限定キャラが出る！');
+    // 限定キャラ以外はすぐ発動・卵エフェクトは孵化後に消す
+    if(ev.id!=='boss_char'){
+      setTimeout(()=>{
+        ev.apply(tC());
+        const ew2=document.getElementById('ew');
+        if(ew2){ew2.style.filter='';ew2.style.animation='';}
+      },500);
+    } else {
+      ev.apply(tC());
+      showN('✨ 激レア卵！次の孵化で限定キャラ確定！');
+    }
   }
 }
 
 function getHatchRM(){
-  // 激レア時はレア率を大幅アップ
-  if(_superEggActive)return getRM()*20;
-  return getRM();
+  const base=getRM();
+  if(_superEggActive)return base*20;
+  if(S._luckyRmUp)return base*3;
+  return base;
 }
 
 // 記録システム// 記録システム
@@ -2146,6 +2280,7 @@ setInterval(()=>{
     }
   }
   if(Date.now()-S.ct>1200)S.combo=0;
+  S._totalPlayMs=(S._totalPlayMs||0)+100; // 累積プレイ時間
   chkA();render();
 },100);
 
@@ -2217,6 +2352,15 @@ function watchAd(type){
 }
 function removAds(){showN('🚫 近日公開予定です！');}
 function buyPack(n){showN('🛒 近日公開予定です！');}
+
+
+
+
+
+
+
+
+
 
 
 
