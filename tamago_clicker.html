@@ -436,6 +436,8 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
 
 
 
+
+
 const MEMO={
   'chibi_dragon':['ガオッ！（小さいけど本気だよ）','たまごとご主人さま'],
   'chick':['ぴよぴよ！','あたたかいひざのうえ'],
@@ -567,31 +569,36 @@ function getACtx(){
 
 // 波形をバッファに事前生成
 function makeBuffer(freqs,durSec){
-  const ctx=getACtx();
-  const sr=ctx.sampleRate;
-  const len=Math.floor(sr*durSec);
-  const buf=ctx.createBuffer(1,len,sr);
-  const data=buf.getChannelData(0);
-  for(let i=0;i<len;i++){
-    let s=0;
-    const t=i/sr;
-    // スムーズなエンベロープ（attack短め + 指数的decay + 末尾ゼロ保証）
-    const attack=Math.min(t*80,1);
-    const decay=Math.exp(-t*8/durSec);
-    const env=attack*decay;
-    freqs.forEach(f=>{s+=Math.sin(2*Math.PI*f*t);});
-    data[i]=(s/freqs.length)*env*0.25;
-  }
-  // 末尾10msをフェードアウト（ブツッ防止）
-  const fadeLen=Math.floor(sr*0.01);
-  for(let i=len-fadeLen;i<len;i++){
-    data[i]*=(len-i)/fadeLen;
-  }
-  return buf;
+  try{
+    const ctx=getACtx();
+    const sr=ctx.sampleRate;
+    const len=Math.floor(sr*durSec);
+    const buf=ctx.createBuffer(1,len,sr);
+    const data=buf.getChannelData(0);
+    for(let i=0;i<len;i++){
+      const t=i/sr;
+      const attack=Math.min(t*200,1); // 素早いattack
+      const decay=Math.exp(-t*12/durSec); // 滑らかなdecay
+      const env=attack*decay;
+      let s=0;
+      freqs.forEach(f=>{s+=Math.sin(2*Math.PI*f*t);});
+      data[i]=(s/freqs.length)*env*0.2;
+    }
+    // 末尾20msを完全ゼロへ（プチプチ防止）
+    const fade=Math.floor(sr*0.02);
+    for(let i=Math.max(0,len-fade);i<len;i++){
+      data[i]*=(len-i)/fade;
+    }
+    // 最後の数サンプルを強制ゼロ
+    for(let i=len-5;i<len;i++) data[i]=0;
+    return buf;
+  }catch(e){return null;}
 }
 
+let _activeSounds=0;
 function playBuf(buf){
   if(!seEnabled||!buf)return;
+  if(_activeSounds>3)return; // 同時再生数を制限（プチプチ防止）
   try{
     const ctx=getACtx();
     const src=ctx.createBufferSource();
@@ -599,11 +606,18 @@ function playBuf(buf){
     src.buffer=buf;
     src.connect(g);
     g.connect(ctx.destination);
-    g.gain.setValueAtTime(seVol, ctx.currentTime);
-    // 末尾に向けてフェードアウト（ブツッ防止）
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+buf.duration);
-    src.start();
-    src.onended=()=>{try{src.disconnect();g.disconnect();}catch(e){}};
+    const now=ctx.currentTime;
+    g.gain.setValueAtTime(0,now);
+    g.gain.linearRampToValueAtTime(seVol,now+0.005); // 5msでfade in
+    g.gain.setValueAtTime(seVol,now+buf.duration-0.02);
+    g.gain.linearRampToValueAtTime(0,now+buf.duration); // 最後20msでfade out
+    _activeSounds++;
+    src.start(now);
+    src.stop(now+buf.duration);
+    src.onended=()=>{
+      _activeSounds=Math.max(0,_activeSounds-1);
+      try{src.disconnect();g.disconnect();}catch(e){}
+    };
   }catch(e){}
 }
 
@@ -625,7 +639,7 @@ let _lastTapSnd=0;
 function sndTap(){
   if(!seEnabled)return;
   const now=Date.now();
-  if(now-_lastTapSnd<80)return; // 80ms以内の連打音を間引き
+  if(now-_lastTapSnd<120)return; // 120ms以内の連打音を間引き
   _lastTapSnd=now;
   initBufs();playBuf(_buffers.tap);
 }
@@ -2036,7 +2050,12 @@ function getHatchRM(){
   return getRM();
 }
 
-// 記録システム// ===== メインループ =====
+// 記録システム// 記録システム
+function updateRecords(){
+  S._recMaxCombo=Math.max(S._recMaxCombo||0, S.combo);
+  S._recMaxTap=Math.max(S._recMaxTap||0, S.tp2);
+}
+// ===== メインループ =====
 setInterval(()=>{
   _lastAct=Date.now();
   S.lastAct=Date.now();
@@ -2173,6 +2192,8 @@ function watchAd(type){
 }
 function removAds(){showN('🚫 近日公開予定です！');}
 function buyPack(n){showN('🛒 近日公開予定です！');}
+
+
 
 
 
