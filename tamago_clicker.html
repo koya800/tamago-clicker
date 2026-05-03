@@ -70,6 +70,8 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
 .si{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:white;border:2px solid #ffe0c0;margin-bottom:5px;touch-action:manipulation;}
 .si.dn{opacity:.4;}.sx{font-size:18px;flex-shrink:0;}.sn{font-size:12px;font-weight:800;color:#c05020;}
 .sd{font-size:10px;color:#c08060;}.sp{font-size:11px;font-weight:800;color:var(--or);white-space:nowrap;}
+@keyframes affordPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,180,71,0);transform:scale(1)}50%{box-shadow:0 0 0 4px rgba(255,180,71,.35);transform:scale(1.015)}}
+.si.aff{border-color:#ffb347;background:linear-gradient(135deg,#fffaf0,#fff5e8);animation:affordPulse 1.6s ease-in-out infinite}
 /* 転生 */
 #pbtn{width:100%;padding:11px;border-radius:13px;border:2px solid #c0c0e0;background:linear-gradient(135deg,#f5f5ff,#fff0f8);font-size:14px;font-weight:900;cursor:pointer;color:#7070c0;font-family:inherit;touch-action:manipulation;}
 #pbtn.rd{border-color:var(--pu);background:linear-gradient(135deg,#ede0ff,#ffe0ff);color:var(--pu);}
@@ -109,9 +111,16 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
 /* デイリー */
 #db{width:100%;padding:9px;border-radius:12px;border:2px solid #c0f0c0;background:linear-gradient(135deg,#f0fff5,#f5fff0);font-size:12px;font-weight:800;cursor:pointer;color:#40a060;font-family:inherit;display:none;touch-action:manipulation;}
 
-@keyframes wkWalk{0%{transform:translateY(0) scaleX(var(--fx)) rotate(-3deg)}25%{transform:translateY(-8px) scaleX(var(--fx)) rotate(2deg) scale(1.07)}50%{transform:translateY(-1px) scaleX(var(--fx)) rotate(-2deg)}75%{transform:translateY(-7px) scaleX(var(--fx)) rotate(3deg) scale(1.05)}100%{transform:translateY(0) scaleX(var(--fx)) rotate(-3deg)}}
-
 @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(120px) rotate(720deg);opacity:0}}
+@keyframes cdBreath{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2px) scale(1.05)}}
+@keyframes cdAttack{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(8px,-4px) rotate(-12deg) scale(1.18)}55%{transform:translate(20px,-2px) rotate(8deg) scale(1.2)}100%{transform:translate(0,0) rotate(0)}}
+@keyframes flameFloat{0%{transform:translate(0,0) scale(0.4) rotate(-10deg);opacity:0}25%{transform:translate(15px,-4px) scale(1.1) rotate(0);opacity:1}80%{transform:translate(45px,-10px) scale(0.9) rotate(15deg);opacity:.9}100%{transform:translate(60px,-14px) scale(0.4) rotate(25deg);opacity:0}}
+#cd-pet{position:absolute;left:10px;top:18px;font-size:30px;z-index:5;cursor:pointer;text-shadow:0 2px 4px rgba(0,0,0,.18);user-select:none;-webkit-user-select:none;animation:cdBreath 1.6s ease-in-out infinite;filter:drop-shadow(0 0 0 transparent);transition:filter .2s}
+#cd-pet.atk{animation:cdAttack .55s ease-out}
+#cd-pet.lv2{filter:drop-shadow(0 0 4px #ffb347)}
+#cd-pet.lv4{filter:drop-shadow(0 0 6px #ff6020) drop-shadow(0 0 10px #ffb347)}
+#cd-pet.lv6{filter:drop-shadow(0 0 8px #ff2020) drop-shadow(0 0 14px #ff8040)}
+.flame{position:absolute;font-size:18px;pointer-events:none;z-index:4;animation:flameFloat .55s ease-out forwards}
 @keyframes rareBurst{0%{transform:scale(1);filter:brightness(1)}30%{transform:scale(1.15);filter:brightness(2.5)}60%{transform:scale(0.97);filter:brightness(1.5)}100%{transform:scale(1);filter:brightness(1)}}
 @keyframes epicShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 @keyframes floatUp{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-60px);opacity:0}}
@@ -165,9 +174,11 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
       <div id="quest-next" style="margin-bottom:4px"></div>
       <div id="quest-bar" style="margin-bottom:4px"></div>
       <button id="evolve-egg-btn" onclick="evolveEgg()" style="display:none;width:100%;padding:10px;margin-bottom:6px;background:linear-gradient(135deg,#ff6eb4,#ffb347);color:white;font-size:13px;font-weight:900;border:none;border-radius:14px;cursor:pointer;touch-action:manipulation;box-shadow:0 3px 10px rgba(255,100,100,0.4)"></button>
+      <div id="hatch-ms-bar" style="margin-bottom:4px"></div>
       <div id="bonus-bar" style="min-height:22px;margin-bottom:4px"></div>
       <button id="db" onclick="claimDaily()">🎁 デイリーボーナスを受け取る！</button>
       <div id="ez" style="position:relative;touch-action:none;user-select:none;-webkit-user-select:none">
+        <div id="cd-pet" title="ちびドラゴンが応援中！">🐲</div>
         <div id="ew">
           <svg id="egg-svg" viewBox="0 0 120 138" xmlns="http://www.w3.org/2000/svg">
             <defs><linearGradient id="eg-g" x1="30%" y1="10%" x2="80%" y2="100%"><stop offset="0%" stop-color="#fff0f8"/><stop offset="100%" stop-color="#ffb6e8"/></linearGradient></defs>
@@ -175,12 +186,10 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
             <ellipse cx="44" cy="48" rx="11" ry="6.5" fill="white" opacity=".7" transform="rotate(-30,44,48)"/>
           </svg>
         </div>
-        <div id="walker-area" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:18px;z-index:2"></div>
         <div id="pbw"><div id="pb" style="width:0%"></div></div>
         <div id="ph">孵化まで 0 / 60</div>
         <div id="lv-next" style="text-align:center;min-height:16px;margin-top:2px"></div>
         <div id="atk-bar" style="margin-top:2px;min-height:18px"></div>
-        <div id="walker-area" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;border-radius:18px"></div>
       </div>
       <div id="sts">
         <div class="sc"><div class="sl">生き物</div><div class="sv" id="tc">0</div></div>
@@ -236,6 +245,15 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
               <span>🔊</span>
             </div>
           </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:white;border-radius:13px;border:2px solid #e0d8ff">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#7050c0">📳 振動 ON / OFF</div>
+              <div style="font-size:10px;color:#aaa;margin-top:2px">タップ・孵化時のバイブ</div>
+            </div>
+            <div id="vib-tog" onclick="toggleVib()" style="width:52px;height:28px;border-radius:999px;background:#ff9de2;cursor:pointer;position:relative;touch-action:manipulation;flex-shrink:0">
+              <div id="vib-knob" style="position:absolute;top:3px;left:26px;width:22px;height:22px;border-radius:50%;background:white;transition:left .15s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="card" style="border-color:#ffd700;background:linear-gradient(135deg,#fffdf0,#fff8e0)">
@@ -264,51 +282,13 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
           </div>
         </div>
       </div>
-      <div class="card" style="border-color:#c0e8ff;background:linear-gradient(135deg,#f0f8ff,#f8f0ff)">
-        <div class="ct" style="color:#4080c0">🚫 広告を削除する</div>
-        <div onclick="removAds()" style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;background:white;border-radius:13px;border:2px solid #c0e8ff;cursor:pointer;touch-action:manipulation">
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:28px">✨</span>
-            <div>
-              <div style="font-size:14px;font-weight:900;color:#4080c0">広告なしでプレイ！</div>
-              <div style="font-size:10px;color:#aaa">一度購入すれば永久に広告非表示</div>
-            </div>
-          </div>
-          <div style="background:linear-gradient(135deg,#4080c0,#8040c0);color:white;font-size:13px;font-weight:900;padding:10px 16px;border-radius:11px;white-space:nowrap">¥600</div>
+      <div class="card" style="border-color:#c0e8ff;background:linear-gradient(135deg,#f0f8ff,#fff0f8)">
+        <div class="ct" style="color:#4080c0">🛒 ストア（近日公開予定）</div>
+        <div style="font-size:11px;color:#888;line-height:1.7;padding:8px 10px;background:white;border-radius:11px;border:1.5px solid #c0e8ff">
+          <div style="margin-bottom:4px">✨ <b>広告なしプラン</b> — 永久に広告非表示</div>
+          <div style="margin-bottom:4px">🥚 <b>かけらパック</b> — 1万 / 5万 / 20万 / 100万</div>
+          <div style="color:#aaa;font-size:10px;margin-top:6px">※ 課金要素は今後実装予定です</div>
         </div>
-        <div style="font-size:10px;color:#bbb;text-align:center;margin-top:6px">※ 近日公開予定</div>
-      </div>
-      <div class="card" style="border-color:#ffb6e8;background:linear-gradient(135deg,#fff0f8,#fff8f0)">
-        <div class="ct" style="color:var(--pk)">🥚 たまごのかけらパック</div>
-        <div style="font-size:10px;color:#bbb;margin:-4px 0 10px">かけらを増やしてゲームを有利に進めよう！</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div onclick="buyPack(1)" style="background:white;border-radius:13px;border:2px solid #ffd6f0;padding:12px 8px;text-align:center;cursor:pointer;touch-action:manipulation">
-            <div style="font-size:28px">🥚</div>
-            <div style="font-size:12px;font-weight:900;color:var(--pk);margin:4px 0 2px">かけら 1万</div>
-            <div style="font-size:10px;color:#aaa;margin-bottom:6px">ちょっと足しに</div>
-            <div style="background:linear-gradient(135deg,var(--pk),#ff9de2);color:white;font-size:12px;font-weight:900;padding:6px;border-radius:8px">¥120</div>
-          </div>
-          <div onclick="buyPack(2)" style="background:white;border-radius:13px;border:2px solid #ffd6f0;padding:12px 8px;text-align:center;cursor:pointer;touch-action:manipulation">
-            <div style="font-size:28px">🥚🥚</div>
-            <div style="font-size:12px;font-weight:900;color:var(--pk);margin:4px 0 2px">かけら 5万</div>
-            <div style="font-size:10px;color:#aaa;margin-bottom:6px">まとめてお得</div>
-            <div style="background:linear-gradient(135deg,var(--pk),#ff9de2);color:white;font-size:12px;font-weight:900;padding:6px;border-radius:8px">¥480</div>
-          </div>
-          <div onclick="buyPack(3)" style="background:white;border-radius:13px;border:2px solid #ffd6f0;padding:12px 8px;text-align:center;cursor:pointer;touch-action:manipulation;position:relative">
-            <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--pk);color:white;font-size:9px;font-weight:900;padding:2px 10px;border-radius:6px;white-space:nowrap">🔥 人気！</div>
-            <div style="font-size:28px">💎</div>
-            <div style="font-size:12px;font-weight:900;color:var(--pk);margin:4px 0 2px">かけら 20万</div>
-            <div style="font-size:10px;color:#aaa;margin-bottom:6px">一番おすすめ</div>
-            <div style="background:linear-gradient(135deg,var(--pk),#ff9de2);color:white;font-size:12px;font-weight:900;padding:6px;border-radius:8px">¥1,600</div>
-          </div>
-          <div onclick="buyPack(4)" style="background:white;border-radius:13px;border:2px solid #ffd6f0;padding:12px 8px;text-align:center;cursor:pointer;touch-action:manipulation">
-            <div style="font-size:28px">👑</div>
-            <div style="font-size:12px;font-weight:900;color:var(--pk);margin:4px 0 2px">かけら 100万</div>
-            <div style="font-size:10px;color:#aaa;margin-bottom:6px">最大パック</div>
-            <div style="background:linear-gradient(135deg,var(--pk),#ff9de2);color:white;font-size:12px;font-weight:900;padding:6px;border-radius:8px">¥6,800</div>
-          </div>
-        </div>
-        <div style="font-size:10px;color:#bbb;text-align:center;margin-top:8px">※ 近日公開予定</div>
       </div>
       <div class="card" style="border-color:#e0d0ff;background:linear-gradient(135deg,#f8f0ff,#fff0f8)">
         <div class="ct" style="color:#9060c0">🔮 かくしキャラのうわさ</div>
@@ -568,7 +548,6 @@ function checkRhythm(){
     if(_rp){
       const _fh=S._recFastHatch?((S._recFastHatch/1000).toFixed(1)+'秒'):'未計測';
       _rp.innerHTML='<div>👆 最高タップ数: <b>'+fmt(S._recMaxTap)+'回</b></div>'
-        +'<div>🔥 最多コンボ: <b>'+fmt(S._recMaxCombo)+'回</b></div>'
         +'<div>⚡ 最短孵化タイム: <b>'+_fh+'</b></div>'
         +'<div>👹 ボス撃破数: <b>'+(S._bossCount||0)+'回</b></div>'
         +'<div>🥚 総孵化数: <b>'+fmt(S._hatchCount||0)+'回</b></div>';
@@ -652,6 +631,7 @@ function initBufs(){
     _buffers.rare=makeBuffer([523,659,784,1047],0.4);
     _buffers.legend=makeBuffer([523,659,784,880,1047],0.6);
     _buffers.secret=makeBuffer([392,523,659,784,1047],0.7);
+    _buffers.buy=makeBuffer([523,784,1047],0.22);  // 購入：明るい上昇和音
   }catch(e){}
 }
 
@@ -667,6 +647,7 @@ function sndHatch(){if(!seEnabled)return;initBufs();playBuf(_buffers.hatch);}
 function sndRare(){if(!seEnabled)return;initBufs();playBuf(_buffers.rare);}
 function sndLegend(){if(!seEnabled)return;initBufs();playBuf(_buffers.legend);}
 function sndSecret(){if(!seEnabled)return;initBufs();playBuf(_buffers.secret);}
+function sndBuy(){if(!seEnabled)return;initBufs();playBuf(_buffers.buy);}
 function toggleSE(){
   seEnabled=!seEnabled;
   const tog=document.getElementById('se-tog');
@@ -675,6 +656,14 @@ function toggleSE(){
   if(knob)knob.style.left=seEnabled?'22px':'2px';
 }
 function setSeVol(v){seVol=v/100;}
+function toggleVib(){
+  _vibEnabled=!_vibEnabled;
+  const tog=document.getElementById('vib-tog');
+  const knob=document.getElementById('vib-knob');
+  if(tog)tog.style.background=_vibEnabled?'#ff9de2':'#ccc';
+  if(knob)knob.style.left=_vibEnabled?'26px':'2px';
+  if(_vibEnabled)vib(20);
+}
 
 function showCrModal(id){
   const cr=CR.find(x=>x.id===id)||SECRET_CR.find(x=>x.id===id);
@@ -710,7 +699,7 @@ function buyPack(n){showN('🛒 準備中！近日公開予定！');}
 
 
 // レベルシステム（多段階）
-const LV_TH=[10,30,60,100,150,200,300,500,750,1000];
+const LV_TH=[12,38,75,125,190,250,375,625,940,1250];
 function getLv(cnt){
   let lv=0;
   for(let i=0;i<LV_TH.length;i++){if(cnt>=LV_TH[i])lv=i+1;else break;}
@@ -722,14 +711,14 @@ function getNextLvTh(cnt){
 }
 // ===== データ =====
 const ET=[
-  {id:'n', icon:'🥚',name:'ふつうの卵',  unlockAt:0,    tb:1,   th:40,   col:['#fff0f8','#ffb6e8','#ff9de2'], def:0},
-  {id:'g', icon:'🌕',name:'きんいろ卵',  unlockAt:60,   tb:2,   th:150,  col:['#fffbe0','#ffe066','#f5c518'], def:30},
-  {id:'cr',icon:'💠',name:'クリスタル卵',unlockAt:80,   tb:5,   th:280,  col:['#eef8ff','#80d8ff','#40b8ff'], def:150},
-  {id:'fi',icon:'🔥',name:'ほのおの卵',  unlockAt:200,  tb:15,  th:500,  col:['#fff3ee','#ffaa70','#ff6020'], def:600},
-  {id:'ic',icon:'❄',name:'こおりの卵',  unlockAt:500,  tb:40,  th:900,  col:['#eef8ff','#a8eeff','#60ccff'], def:2500},
-  {id:'ga',icon:'🌌',name:'ぎんが卵',    unlockAt:1200, tb:100, th:1500, col:['#f0eaff','#b888ff','#7840d0'], def:10000},
-  {id:'ra',icon:'🌈',name:'にじ卵',      unlockAt:3000, tb:300, th:2500, col:['#ffeef8','#ff90d0','#ff40a0'], def:40000},
-  {id:'sp',icon:'🚀',name:'うちゅう卵',  unlockAt:7000, tb:800, th:4000, col:['#eef4ff','#90c8ff','#4090ff'], def:150000},
+  {id:'n', icon:'🥚',name:'ふつうの卵',  unlockAt:0,    tb:1,   th:50,   col:['#fff0f8','#ffb6e8','#ff9de2'], def:0},
+  {id:'g', icon:'🌕',name:'きんいろ卵',  unlockAt:70,   tb:2,   th:190,  col:['#fffbe0','#ffe066','#f5c518'], def:40},
+  {id:'cr',icon:'💠',name:'クリスタル卵',unlockAt:110,  tb:5,   th:350,  col:['#eef8ff','#80d8ff','#40b8ff'], def:200},
+  {id:'fi',icon:'🔥',name:'ほのおの卵',  unlockAt:280,  tb:15,  th:650,  col:['#fff3ee','#ffaa70','#ff6020'], def:800},
+  {id:'ic',icon:'❄',name:'こおりの卵',  unlockAt:700,  tb:40,  th:1200, col:['#eef8ff','#a8eeff','#60ccff'], def:3500},
+  {id:'ga',icon:'🌌',name:'ぎんが卵',    unlockAt:1700, tb:100, th:2000, col:['#f0eaff','#b888ff','#7840d0'], def:14000},
+  {id:'ra',icon:'🌈',name:'にじ卵',      unlockAt:4500, tb:300, th:3300, col:['#ffeef8','#ff90d0','#ff40a0'], def:55000},
+  {id:'sp',icon:'🚀',name:'うちゅう卵',  unlockAt:10000,tb:800, th:5500, col:['#eef4ff','#90c8ff','#4090ff'], def:200000},
 ];const CR=[
   {id:'chibi_dragon',icon:'🐲',name:'ちびドラゴン',r:'U',w:0,eps:0.1,atk:1,eggs:['n','g','cr','fi','ic','ga','ra','sp']},
   {id:'chick',   icon:'🐣',name:'ひよこ',        r:'C',w:70, eps:0.03, atk:0.15, eggs:['n','g']},
@@ -817,13 +806,13 @@ const ET=[
   {id:'r_sp', icon:'👾',name:'うちゅうじん',      r:'R',w:0.004,eps:600, atk:0.1, eggs:['sp']},
 ];
 const UPG=[
-  {id:'cd1',icon:'🐲',name:'ちびドラゴン Lv2',desc:'攻撃力+1',   cost:150,        req:null,  ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=1;}},
-  {id:'cd2',icon:'🐲',name:'ちびドラゴン Lv3',desc:'攻撃力+2',   cost:8000,       req:'cd1', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=2;}},
-  {id:'cd3',icon:'🐲',name:'ちびドラゴン Lv4',desc:'攻撃力+5',   cost:20000,      req:'cd2', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=5;}},
-  {id:'cd4',icon:'🔥',name:'ちびドラゴン Lv5',desc:'攻撃力+15',  cost:150000,     req:'cd3', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=15;}},
-  {id:'cd5',icon:'🔥',name:'ちびドラゴン Lv6',desc:'攻撃力+50',  cost:500000,    req:'cd4', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=50;}},
-  {id:'cd6',icon:'🐉',name:'ちびドラゴン Lv7',desc:'攻撃力+150', cost:5000000,   req:'cd5', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=150;}},
-  {id:'cd7',icon:'🐉',name:'ちびドラゴン Lv8',desc:'攻撃力+500', cost:150000000,  req:'cd6', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=500;}},
+  {id:'cd1',icon:'🐲',name:'ちびドラゴン Lv2',desc:'攻撃力+2 / ブレス間隔短縮', cost:120,       req:null,  ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=2;}},
+  {id:'cd2',icon:'🐲',name:'ちびドラゴン Lv3',desc:'攻撃力+4 / ブレス間隔短縮', cost:1200,      req:'cd1', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=4;}},
+  {id:'cd3',icon:'🐲',name:'ちびドラゴン Lv4',desc:'攻撃力+10 / ブレス間隔短縮',cost:8000,      req:'cd2', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=10;}},
+  {id:'cd4',icon:'🔥',name:'ちびドラゴン Lv5',desc:'攻撃力+30 / ブレスがオレンジに', cost:60000, req:'cd3', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=30;}},
+  {id:'cd5',icon:'🔥',name:'ちびドラゴン Lv6',desc:'攻撃力+90', cost:400000,    req:'cd4', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=90;}},
+  {id:'cd6',icon:'🐉',name:'ちびドラゴン Lv7',desc:'攻撃力+250 / ブレスが赤く', cost:3000000, req:'cd5', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=250;}},
+  {id:'cd7',icon:'🐉',name:'ちびドラゴン Lv8',desc:'攻撃力+800', cost:80000000,  req:'cd6', ap:()=>{const cd=CR.find(x=>x.id==='chibi_dragon');if(cd)cd.atk+=800;}},
   {id:'a1', icon:'🥚',name:'孵化器 Mk.1',   desc:'自動+3/秒',   cost:1000,       req:null,  ap:()=>{S.bps+=3;}},
   {id:'a2', icon:'🏭',name:'孵化器 Mk.2',   desc:'自動+15/秒',  cost:12000,      req:'a1',  ap:()=>{S.bps+=15;}},
   {id:'a3', icon:'🚀',name:'超大型孵化炉',  desc:'自動+60/秒',   cost:600000,    req:'a2',  ap:()=>{S.bps+=60;}},
@@ -917,11 +906,137 @@ const ACH=[
 ];
 const RC={C:'#888',U:'#5b9cf6',R:'#f5c518',E:'#b06ee0',L:'#ff8c42'};
 const RN={C:'コモン',U:'アンコモン',R:'レア',E:'エピック',L:'レジェンド'};
+// 難易度UP：R/E/L の出現重みを×0.7
+CR.forEach(c=>{if(c.r==='R'||c.r==='E'||c.r==='L')c.w=c.w*0.7;});
+
+// ===== ちびドラゴン自動攻撃 =====
+let _cdLastAttack=0;
+function cdLevel(){
+  // 購入済みのcd強化数を返す（0〜7）
+  let lv=0;
+  for(let i=1;i<=7;i++)if(S.ub['cd'+i])lv++;
+  return lv;
+}
+function cdAttackInterval(){
+  // Lv0:1500ms → Lv7:600ms。my3/co_max があればさらに速く
+  const lv=cdLevel();
+  let base=Math.max(600,1500-lv*130);
+  if(S.cu&&S.cu['co_max'])base=Math.max(450,base*0.7);
+  return base;
+}
+function cdAutoAttack(){
+  if(!tutDone)return;
+  const now=Date.now();
+  const interval=cdAttackInterval();
+  if(now-_cdLastAttack<interval)return;
+  _cdLastAttack=now;
+  const cd=CR.find(x=>x.id==='chibi_dragon');
+  if(!cd)return;
+  const eg=gE();
+  if(!eg)return;
+  if(typeof S.tpg==='number')S.tpg={n:S.tpg,g:0,cr:0,fi:0,ic:0,ga:0,ra:0,sp:0};
+  // ダメージ：ちびドラゴンのatk × 所持数（=1）。コア強化やラッキーバフも反映。
+  const cdAtkRaw=cd.atk*(S.cr['chibi_dragon']||1)*(S._coreAtkB||1)*(S._luckyAtkUp?2:1);
+  const _eggDefB=S._coreEggDef||1;
+  const effectiveDef=Math.floor((eg.def||0)*_eggDefB*getPrestigeDefBonus());
+  const dmg=Math.max(1,Math.floor(cdAtkRaw-effectiveDef*0.6)); // ちびは防御の60%しか抜けない（タップを主役に）
+  S.tpg[eg.id]=(S.tpg[eg.id]||0)+dmg;
+  // ビジュアル：ドラゴン突進＋フレイム
+  const cdEl=document.getElementById('cd-pet');
+  if(cdEl){
+    cdEl.classList.remove('atk');void cdEl.offsetWidth;cdEl.classList.add('atk');
+    setTimeout(()=>{if(cdEl)cdEl.classList.remove('atk');},560);
+  }
+  spawnFlame();
+  // 孵化判定（タップと同じ）
+  while((S.tpg[eg.id]||0)>=eg.th){
+    S.tpg[eg.id]-=eg.th;
+    hatch(eg);
+    S._hatchCount=(S._hatchCount||0)+1;
+    try{checkSuperEgg();}catch(e){}
+    try{checkHatchMilestone();}catch(e){}
+    const now2=Date.now();
+    if(S._lastHatchTime){
+      const t=now2-S._lastHatchTime;
+      if(!S._recFastHatch||t<S._recFastHatch)S._recFastHatch=t;
+    }
+    S._lastHatchTime=Date.now();
+  }
+}
+function spawnFlame(){
+  const ez=document.getElementById('ez');
+  if(!ez)return;
+  const fl=document.createElement('div');
+  fl.className='flame';
+  fl.style.left='38px';fl.style.top='28px';
+  fl.textContent='🔥';
+  ez.appendChild(fl);
+  setTimeout(()=>{if(fl.parentNode)fl.remove();},560);
+}
+function updateCdAura(){
+  const el=document.getElementById('cd-pet');
+  if(!el)return;
+  const lv=cdLevel();
+  el.classList.remove('lv2','lv4','lv6');
+  if(lv>=6)el.classList.add('lv6');
+  else if(lv>=4)el.classList.add('lv4');
+  else if(lv>=2)el.classList.add('lv2');
+}
+
+// ===== 孵化マイルストーン =====
+const HATCH_MS=[
+  {n:25,    eg:200,                   msg:'25匹孵化！'},
+  {n:50,    eg:500,                   msg:'50匹孵化！'},
+  {n:100,   eg:1500,    giveR:'C',    msg:'100匹孵化！コモン確定！'},
+  {n:250,   eg:5000,    giveR:'U',    msg:'250匹！アンコモン確定！'},
+  {n:500,   eg:15000,   giveR:'U',    msg:'500匹！アンコモン確定！'},
+  {n:1000,  eg:50000,   giveR:'R',    core:1, msg:'1000匹！レア＋💎+1！'},
+  {n:2500,  eg:200000,  giveR:'R',    msg:'2500匹！レア確定！'},
+  {n:5000,  eg:800000,  giveR:'E',    core:1, msg:'5000匹！エピック確定！'},
+  {n:10000, eg:3000000, giveR:'E',    core:2, msg:'1万匹！エピック＋💎+2！'},
+  {n:25000, eg:15000000,giveR:'L',    core:3, msg:'2.5万匹！レジェンド確定！'},
+  {n:50000, eg:80000000,giveR:'L',    core:5, msg:'5万匹！'},
+  {n:100000,eg:500000000,giveR:'L',   core:10,msg:'10万匹！神！'},
+];
+function nextHatchMs(){
+  const cnt=S._hatchCount||0;
+  return HATCH_MS.find(m=>m.n>cnt)||null;
+}
+function checkHatchMilestone(){
+  const cnt=S._hatchCount||0;
+  const ms=HATCH_MS.find(m=>m.n===cnt);
+  if(!ms)return;
+  S.eg+=ms.eg;
+  if(ms.core)S.pc2+=ms.core;
+  let extra='';
+  if(ms.giveR){
+    const pool=CR.filter(c=>c.r===ms.giveR&&c.id!=='chibi_dragon');
+    if(pool.length){
+      const ch=pool[Math.floor(Math.random()*pool.length)];
+      S.cr[ch.id]=(S.cr[ch.id]||0)+1;
+      extra=' / '+ch.icon+ch.name;
+    }
+  }
+  showN('🎁 '+ms.msg+' +'+fmt(ms.eg)+'💰'+extra);
+  vib([40,20,40,20,80]);
+  try{spawnConfetti(20,['#ffd700','#ff80c0','#80c0ff']);}catch(e){}
+  saveGame();
+}
 
 // ===== ゲーム状態 =====
-let S={eg:0,tp:1,bps:0,rm:1,tp2:0,pc:0,pc2:0,cu:{},_hatchCount:0,_bossCount:0,_recMaxCombo:0,_recMaxTap:0,_recFastHatch:null,_lastHatchTime:null,tpg:{n:0,g:0,cr:0,fi:0,ic:0,ga:0,ra:0,sp:0},ce:'n',cr:{},ub:{},ad:{},dd:'',combo:0,ct:0,lastAct:0};
+let S={eg:0,tp:1,bps:0,rm:1,tp2:0,pc:0,pc2:0,cu:{},_hatchCount:0,_bossCount:0,_recMaxTap:0,_recFastHatch:null,_lastHatchTime:null,tpg:{n:0,g:0,cr:0,fi:0,ic:0,ga:0,ra:0,sp:0},ce:'n',cr:{},ub:{},ad:{},dd:'',lastAct:0};
 let curTab='main';
-const fmt=n=>n>=1e12?(n/1e12).toFixed(1)+'T':n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=100000?(n/1000).toFixed(0)+'K':Math.floor(n)+'';
+const _SUF=['','','M','B','T','aa','bb','cc','dd','ee','ff','gg','hh','ii','jj','kk','ll','mm','nn','oo','pp','qq','rr','ss','tt','uu','vv','ww','xx','yy','zz'];
+const fmt=n=>{
+  if(!isFinite(n))return '∞';
+  if(n<0)return '-'+fmt(-n);
+  // 100万未満は完全な数字をカンマ区切りで表示
+  if(n<1000000)return Math.floor(n).toLocaleString('en-US');
+  // 100万以上は省略表記
+  let i=0,v=n;
+  while(v>=1000&&i<_SUF.length-1){v/=1000;i++;}
+  return (v<10?v.toFixed(2):v<100?v.toFixed(1):v.toFixed(0))+_SUF[i];
+};
 const tC=()=>Object.entries(S.cr).filter(([k])=>k!=='chibi_dragon').reduce((a,[,b])=>a+b,0);
 const tK=()=>CR.filter(c=>c.id!=='chibi_dragon'&&(S.cr[c.id]||0)>0).length;
 const gE=()=>ET.find(e=>e.id===S.ce)||ET[0];
@@ -929,7 +1044,7 @@ const eps=()=>{
   let s=S.bps;
   CR.forEach(c=>{const n=S.cr[c.id]||0;const lv=getLv(n);s+=n*c.eps*(1+lv*0.02);});
   s+=secretEps();
-  return s*(1+S.pc*0.05)*synBonus();
+  return s*(1+S.pc*0.05)*synBonus()*(S._coreEgB||1);
 };
 
 // ===== タブ切り替え =====
@@ -957,20 +1072,21 @@ function sw(t){
 }
 
 // ===== タップ =====
+let _vibEnabled=true;
+function vib(ms){if(_vibEnabled&&navigator.vibrate){try{navigator.vibrate(ms);}catch(e){}}}
 function tap(ev){
-  S.tp2++;sndTap();
+  S.tp2++;sndTap();vib(8);
   // 夜間タップカウント（23時〜1時）
   const _h=new Date().getHours();
   if(_h===23||_h===0)_nightTapCount++;
-  const eg=gE(),now=Date.now();
-  const _comboTime=800+(S._coreComboTime||0);
-  const _comboMax=20+(S._coreComboMax||0);
-  if(now-S.ct<_comboTime)S.combo=Math.min(S.combo+1,_comboMax);else S.combo=1;
-  S.ct=now;
+  const eg=gE();
   if(typeof S.tpg==='number')S.tpg={n:S.tpg,g:0,cr:0,fi:0,ic:0,ga:0,ra:0,sp:0};
+  // ダメージ：純粋に攻撃力 - 防御力
   const actualDmg=getNetDmg(eg)+(S._coreTapDmg||0);
   S.tpg[eg.id]=(S.tpg[eg.id]||0)+actualDmg;
-  S.eg+=Math.min(10,Math.max(1,Math.floor(S.tp*0.067)));
+  // かけら：S.tp ベース、控えめ（強化購入の動機を確保）
+  S.eg+=Math.max(1,Math.floor(S.tp*0.2));
+  // タップアニメ
   const w=document.getElementById('ew');
   w.classList.remove('pop');void w.offsetWidth;w.classList.add('pop');
   spF(ev,fmt(Math.round(actualDmg*10)/10),eg.col[0]);
@@ -979,6 +1095,7 @@ function tap(ev){
       hatch(eg);
       S._hatchCount=(S._hatchCount||0)+1;
       try{checkSuperEgg();}catch(e){}
+      try{checkHatchMilestone();}catch(e){}
       // 最短孵化タイム記録
       const now2=Date.now();
       if(S._lastHatchTime){
@@ -992,6 +1109,7 @@ function tap(ev){
   _dailyTaps++;
 
   if(S._tapAutoBonus)S.tpg[eg.id]=(S.tpg[eg.id]||0)+S._tapAutoBonus/10;
+  try{checkHappyTap();}catch(e){}
   chkA();try{checkHiddenChars();}catch(e){}render();tutCheck();
 }
 
@@ -1035,15 +1153,20 @@ function hatch(eg,mode){
   S.cr[ch.id]=prev+1;
   // 連続同キャラ孵化カウント（シャドウキャット用）
   if(ch.id===_lastHatchId){_streakCount++;}else{_streakCount=1;_lastHatchId=ch.id;}
-  if(ch.r==='L')sndLegend();
-  else if(ch.r==='E')sndRare();
-  else sndHatch();
+  if(ch.r==='L'){sndLegend();vib([40,30,40,30,80]);}
+  else if(ch.r==='E'){sndRare();vib([30,20,30,20,50]);}
+  else if(ch.r==='R'){sndHatch();vib([20,10,30]);}
+  else {sndHatch();vib(15);}
   // 奇跡の連鎖：0.1%でかけら10倍
   if(S._coreMiracleB&&Math.random()<0.001){
     S.eg+=100;showN('✨ 奇跡の連鎖！+100かけら！');
   }
   showH(ch,prev);
   try{checkHiddenChars();}catch(e){}
+  // 1分間に20匹孵化でsc_storm
+  S._hatchTimes=(S._hatchTimes||[]).filter(t=>Date.now()-t<60000);
+  S._hatchTimes.push(Date.now());
+  if(S._hatchTimes.length>=20)try{unlockSecret('sc_storm');}catch(e){}
 }
 
 // ===== ポップアップ =====
@@ -1112,10 +1235,53 @@ function buyU(id){
   if(!u||S.ub[id])return;
   if(u.req&&!S.ub[u.req]){showN('前の強化を先に買おう！');return;}
   if(S.eg<u.cost){showN('かけらが足りません！');return;}
+  // 購入前のステータス
+  const before={atk:getTotalAtk(),eps:eps()};
   S.eg-=u.cost;S.ub[id]=true;u.ap();
-  const _beforeAtk=getTotalAtk();
-  showN('✨ '+u.name+'を購入！攻撃力→'+getTotalAtk());
+  const after={atk:getTotalAtk(),eps:eps()};
+  // 演出
+  sndBuy();vib([20,15,30]);
+  buyEffect(u,before,after);
+  showN('✨ '+u.name+'を購入！');
   chkA();render();saveGame();
+}
+
+// 購入時の派手演出
+function buyEffect(u,before,after){
+  // 卵がピカッと光る
+  const ew=document.getElementById('ew');
+  if(ew){
+    ew.style.transition='filter 0.15s';
+    ew.style.filter='drop-shadow(0 0 18px gold) drop-shadow(0 0 32px #ffe066) brightness(1.4)';
+    setTimeout(()=>{ew.style.filter='';ew.style.transition='';},450);
+  }
+  // ステータス変化のフロート文字（卵の上に出す）
+  const f=document.getElementById('fl');
+  const eg=document.getElementById('egg-svg');
+  if(f&&eg){
+    const r=eg.getBoundingClientRect();
+    const fr=f.getBoundingClientRect();
+    const cx=r.left-fr.left+r.width/2;
+    const baseTop=r.top-fr.top+r.height*0.15;
+    const dAtk=Math.round((after.atk-before.atk)*10)/10;
+    const dEps=Math.round((after.eps-before.eps)*10)/10;
+    const spawn=(text,color,offsetY,size)=>{
+      const el=document.createElement('div');
+      el.className='fn';
+      el.textContent=text;
+      el.style.cssText='font-size:'+size+'px;font-weight:900;color:'+color+';text-shadow:0 2px 8px rgba(0,0,0,.3);background:rgba(255,255,255,0.92);padding:3px 10px;border-radius:18px;letter-spacing:0.5px;border:2px solid '+color;
+      el.style.left=(cx-50)+'px';
+      el.style.top=(baseTop+offsetY)+'px';
+      f.appendChild(el);
+      setTimeout(()=>el.remove(),1100);
+    };
+    let yOff=0;
+    if(dAtk>0){spawn('⚔ +'+(dAtk<10?dAtk.toFixed(1):Math.floor(dAtk)),'#ff4488',yOff,17);yOff+=26;}
+    if(dEps>0){spawn('💰 +'+fmt(Math.floor(dEps*10)/10)+'/秒','#40a060',yOff,15);yOff+=24;}
+    if(dAtk<=0&&dEps<=0){spawn('★ 効果UP！','#9060c0',0,16);}
+  }
+  // 紙吹雪
+  try{spawnConfetti(8,['#ffd700','#ff80c0','#80c0ff','#ffe066']);}catch(e){}
 }
 
 // ===== 転生 =====
@@ -1125,7 +1291,19 @@ function prestigeReq(){
   const count=[300,800,2000,5000,12000,30000][Math.min(S.pc,5)];
   return {kinds, count};
 }
-function calcC(){return Math.max(1,Math.floor(Math.sqrt(Math.max(tC()-10,0)/20)));}
+function calcC(){return Math.max(1,Math.floor(Math.sqrt(Math.max(tC()-15,0)/25)));}
+function nextCMilestone(){
+  // 次にコア結晶+1になる必要匹数
+  const cur=calcC();
+  // 二分探索的に探す（単調増加なのでシンプル線形）
+  let n=tC();
+  for(let i=0;i<5000;i++){
+    n++;
+    const c=Math.max(1,Math.floor(Math.sqrt(Math.max(n-10,0)/20)));
+    if(c>cur)return n-tC();
+  }
+  return null;
+}
 function tryPrestige(){
   if(!confirm('転生しますか？\n生き物・強化はリセットされますが\nコア結晶'+calcC()+'個を取得します！\n（攻撃力もリセットされます）'))return;
   const c=calcC();
@@ -1221,10 +1399,39 @@ function selEgg(id){
   S.ce=id;updateEgg(id);render();saveGame();
 }
 
+// ===== かけらのカウントアップ表示 =====
+let _displayedEg=0,_egRafStarted=false;
+function startEgCountUp(){
+  if(_egRafStarted)return;
+  _egRafStarted=true;
+  _displayedEg=S.eg;
+  const tick=()=>{
+    const target=S.eg;
+    if(_displayedEg!==target){
+      const diff=target-_displayedEg;
+      const absD=Math.abs(diff);
+      // 大きな差は速く、小さな差はゆっくり追従。最低でも1/frameは進む。
+      const step=Math.max(1,absD*0.12);
+      if(absD<=step+0.5){
+        _displayedEg=target;
+      } else if(diff>0){
+        _displayedEg+=step;
+      } else {
+        _displayedEg-=step;
+      }
+      const ec=document.getElementById('ec');
+      if(ec)ec.textContent=fmt(_displayedEg);
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
 // ===== レンダリング =====
 function render(){
   const tc=tC(),tk=tK(),eg=gE();
-  document.getElementById('ec').textContent=fmt(S.eg);
+  // #ec はカウントアップアニメーションでrAFが処理（render()では更新しない）
+  try{updateCdAura();}catch(e){}
   document.getElementById('ps').textContent=fmt(Math.round(eps()*10)/10)+'/秒';
   document.getElementById('tc').textContent=fmt(tc);
   try{const _tk=document.getElementById('tk');if(_tk)_tk.textContent=tk+'/'+CR.length;}catch(e){}
@@ -1273,6 +1480,28 @@ function render(){
           +'</div>';
       }
     }
+    // 孵化マイルストーン進捗バナー
+    const _msEl=document.getElementById('hatch-ms-bar');
+    if(_msEl){
+      const _ms=nextHatchMs();
+      if(_ms){
+        const cnt=S._hatchCount||0;
+        // 1つ前のマイルストーン（=現在のスタート地点）
+        const prev=HATCH_MS.filter(m=>m.n<=cnt).pop();
+        const start=prev?prev.n:0;
+        const left=_ms.n-cnt;
+        const pct=Math.max(0,Math.min(100,((cnt-start)/(_ms.n-start))*100));
+        let rwd='+'+fmt(_ms.eg)+'💰';
+        if(_ms.giveR)rwd+=' / '+(_ms.giveR==='C'?'⚪':_ms.giveR==='U'?'🔵':_ms.giveR==='R'?'⭐':_ms.giveR==='E'?'💫':'🌟')+'確定';
+        if(_ms.core)rwd+=' / 💎+'+_ms.core;
+        _msEl.innerHTML='<div style="padding:6px 10px;background:linear-gradient(135deg,#fff8e0,#fff0f8);border-radius:11px;border:1.5px solid #ffd6a0">'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><b style="color:#b06000">🎁 次の節目: あと '+left+'匹</b><span style="color:#c08030">'+rwd+'</span></div>'
+          +'<div style="height:5px;background:#ffe6d0;border-radius:99px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#ffb347,#ffd700);transition:width .3s"></div></div>'
+          +'</div>';
+      } else {
+        _msEl.innerHTML='<div style="padding:6px 10px;background:linear-gradient(135deg,#fff8e0,#fff0f8);border-radius:11px;border:1.5px solid #ffd6a0;text-align:center;font-size:11px;font-weight:900;color:#b06000">🏆 全マイルストーン達成！</div>';
+      }
+    }
     // アクティブクエスト表示（未達成のうち次の1つ）
     const _nextQ=QUESTS.find(q=>!_questDone[q.id]);
     const _qEl=document.getElementById('quest-next');
@@ -1312,13 +1541,29 @@ function render(){
       const n=S.cr[c.id],lv=getLv(n);
       return'<div class="ch"><span class="ci">'+c.icon+'</span><span class="cn">'+n+'</span>'+(lv?'<span style="font-size:8px;font-weight:900;color:var(--pk);background:#ffe0f5;border-radius:4px;padding:1px 3px">Lv'+lv+'</span>':'')+'<span class="cm" style="color:'+RC[c.r]+'">'+c.name+'</span></div>';
     }).join(''):'<span style="font-size:12px;color:#80b090">まだいません</span>';
-    // シナジー表示
+    // シナジー表示（アクティブ + あと一歩のヒント）
     const activeSyns=getActiveSyns();
     const synEl=document.getElementById('syn-list');
     if(synEl){
-      synEl.innerHTML=activeSyns.length
-        ?activeSyns.map(s=>'<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:linear-gradient(135deg,#fff8e0,#fff0f8);border-radius:9px;border:1.5px solid #ffd6a0"><span style="font-size:16px">'+s.icon+'</span><div><div style="font-size:11px;font-weight:800;color:#b06000">'+s.name+'</div><div style="font-size:9px;color:#c08030">'+s.desc+'</div></div></div>').join('')
-        :'<span style="font-size:11px;color:#ccc">シナジーなし</span>';
+      // 「あと1〜2匹で発動」シナジーを抽出
+      const nearSyns=SYNS.filter(s=>{
+        if(activeSyns.includes(s))return false;
+        const have=s.ids.filter(id=>(S.cr[id]||0)>=1).length;
+        return have>=Math.max(1,s.need-2)&&have<s.need;
+      }).slice(0,3);
+      let h='';
+      if(activeSyns.length){
+        h+=activeSyns.map(s=>'<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:linear-gradient(135deg,#fff8e0,#fff0f8);border-radius:9px;border:1.5px solid #ffd6a0"><span style="font-size:16px">'+s.icon+'</span><div style="flex:1"><div style="font-size:11px;font-weight:800;color:#b06000">'+s.name+'</div><div style="font-size:9px;color:#c08030">'+s.desc+'</div></div><span style="font-size:9px;background:#50a050;color:white;padding:2px 6px;border-radius:6px;font-weight:900">ON</span></div>').join('');
+      }
+      if(nearSyns.length){
+        h+=nearSyns.map(s=>{
+          const have=s.ids.filter(id=>(S.cr[id]||0)>=1).length;
+          const need=s.need-have;
+          return '<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:#f8f8f8;border-radius:9px;border:1.5px dashed #ccc;opacity:0.85"><span style="font-size:16px;filter:grayscale(0.3)">'+s.icon+'</span><div style="flex:1"><div style="font-size:11px;font-weight:800;color:#888">'+s.name+'</div><div style="font-size:9px;color:#aaa">あと'+need+'種類で発動！</div></div><span style="font-size:9px;background:#aaa;color:white;padding:2px 6px;border-radius:6px;font-weight:900">'+have+'/'+s.need+'</span></div>';
+        }).join('');
+      }
+      if(!h)h='<span style="font-size:11px;color:#ccc">シナジーなし（生き物を集めると発動！）</span>';
+      synEl.innerHTML=h;
     }
   }
   if(curTab==='book'){
@@ -1358,7 +1603,7 @@ function render(){
       return true;
     }).map(u=>{
       const can=S.eg>=u.cost;
-      return'<div class="si"><span class="sx">'+u.icon+'</span>'
+      return'<div class="si'+(can?' aff':'')+'"><span class="sx">'+u.icon+'</span>'
         +'<div style="flex:1"><div class="sn">'+u.name+'</div><div class="sd">'+u.desc+'</div>'
         +'<div style="font-size:10px;font-weight:800;color:'+(can?'#40a060':'#e05050')+'">かけら '+fmt(u.cost)+'</div></div>'
         +(can?'<div onclick="buyU(\''+u.id+'\')" style="font-size:11px;font-weight:900;color:white;padding:7px 12px;border-radius:9px;background:linear-gradient(135deg,#ff6eb4,#ff9de2);cursor:pointer;touch-action:manipulation;white-space:nowrap;">購入する</div>'
@@ -1368,6 +1613,7 @@ function render(){
   }
   if(curTab==='pst'){
     const c=calcC();
+    const nxt=nextCMilestone();
     document.getElementById('co2').textContent=fmt(S.pc2);
     document.getElementById('cg2').textContent=c;
     document.getElementById('pc3').textContent=c;
@@ -1378,6 +1624,8 @@ function render(){
       const _tb=Math.min(0.10,Math.floor(_total/1000)*0.01);
       const _tapEgB=Math.min(0.20,Math.floor(_total/100)*0.005);
       _reqEl.innerHTML='<div style="font-size:11px;line-height:2.0;text-align:left;padding:6px 10px;background:#f8f0ff;border-radius:10px">'
+        +'<div style="color:#7040c0;font-weight:900;font-size:12px">💎 もらえるコア結晶: '+c+' 個'
+        +(nxt?'<span style="color:#aaa;font-size:10px;font-weight:400"> （あと'+nxt+'匹で+1）</span>':'')+'</div>'
         +'<div>👆 今周: <b>'+fmt(S.tp2)+'回</b> / 累積: <b>'+fmt(_total)+'回</b></div>'
         +'<div style="color:#c04040">🛡 卵の防御力ボーナス: <b>-'+Math.round(_tb*100)+'%</b>'
         +'<span style="color:#aaa;font-size:10px">（累積'+fmt(Math.floor(_total/1000)*1000)+'回 / 次は'+fmt((Math.floor(_total/1000)+1)*1000)+'回で-'+(Math.min(10,Math.floor(_total/1000)+1))+'%）</span></div>'
@@ -1413,8 +1661,8 @@ function render(){
 const TUT=[
   {char:'🐲',msg:'ガオッ！ぼくはきみのパートナー、ちびドラゴンだよ！\nいっしょにたまごを割っていこう！\nまずは大きな卵をタップしてみて！',w:'tap',next:false},
   {char:'🐲',msg:'やったね！タップで孵化メーターが進むよ。\nメーターがいっぱいになると生き物が生まれる！\nぼくも攻撃力で卵を攻撃してるよ！',w:null,next:true},
-  {char:'🐲',msg:'かけらが増えてきたね！\n左上の数字がかけらの数だよ。\nかけら200個になるまでタップしよう！',w:'eggs',next:false},
-  {char:'🐲',msg:'かけらが200個たまった！\n「強化」タブをタップして\nぼくを強化してよ！攻撃力が上がるよ！',w:'bought',next:false},
+  {char:'🐲',msg:'かけらが増えてきたね！\n左上の数字がかけらの数だよ。\nかけら150個になるまでタップしよう！',w:'eggs',next:false},
+  {char:'🐲',msg:'かけらが貯まった！\n「強化」タブをタップして\nぼくを強化してよ！攻撃力が上がるよ！',w:'bought',next:false},
   {char:'🐲',msg:'ガオッ！強くなったぞ！\nぼくの攻撃力が上がると卵をもっと速く割れるよ！\n生き物をたくさん集めて、ぼくと一緒にがんばろう！',w:null,next:true},
   {char:'🐲',msg:'図鑑タブで集めた生き物を確認できるよ！\nいろんな生き物を集めるほど攻撃力も上がるよ！',w:'book',next:false},
   {char:'🐲',msg:'チュートリアル完了！\nぼくといっしょにコンプリートを目指そう！ガオッ！',w:null,next:true,last:true},
@@ -1452,7 +1700,7 @@ function tutCheck(){
   if(tutDone||tutStep<0)return;
   const s=TUT[tutStep];if(!s)return;
   if(s.w==='tap'&&S.tp2>=1)tutNext();
-  else if(s.w==='eggs'&&S.eg>=200)tutNext();
+  else if(s.w==='eggs'&&S.eg>=150)tutNext();
   else if(s.w==='bought'&&Object.keys(S.ub).length>=1)tutNext();
   else if(s.w==='book'&&curTab==='book')tutNext();
 }
@@ -1524,6 +1772,12 @@ const SECRET_CR=[
   {id:'sc_cosmos',  icon:'🪐',name:'うちゅうのこころ',r:'L',eps:50, hint:'コスモスのかみ入手'},
   {id:'sc_patient', icon:'🐢',name:'ゆっくりけんじゃ',r:'E',eps:10, hint:'1時間放置'},
   {id:'sc_veteran', icon:'👴',name:'ベテランたまごし',r:'L',eps:30, hint:'転生10回以上'},
+  // 追加シークレット
+  {id:'sc_dawn',    icon:'🌅',name:'あさかぜのせいれい',r:'L',eps:35,hint:'朝5時〜6時にプレイ'},
+  {id:'sc_storm',   icon:'⚡',name:'いかずちのこ',     r:'E',eps:18,hint:'1分以内に20匹孵化'},
+  {id:'sc_collector',icon:'💖',name:'いきもののあいごか',r:'L',eps:45,hint:'1キャラ500匹以上'},
+  {id:'sc_streak',  icon:'📅',name:'こよみのかみ',     r:'L',eps:40,hint:'7日連続ログイン'},
+  {id:'sc_marathon',icon:'🏃',name:'まらそんなー',     r:'E',eps:20,hint:'累積プレイ2時間'},
 ];
 let secretFound={};
 function secretEps(){return SECRET_CR.filter(s=>secretFound[s.id]).reduce((a,s)=>a+s.eps,0);}
@@ -1578,6 +1832,7 @@ function checkSecrets(){
   if(!_scReady||!tutDone)return;
   const now=new Date(),h=now.getHours(),tc=Object.values(S.cr).reduce((a,b)=>a+b,0),tk=Object.keys(S.cr).filter(id=>([...CR,...SECRET_CR.map(s=>({id:s.id}))]).find(c=>c.id===id)).length;
   if(h>=3&&h<4)unlockSecret('sc_midnight');
+  if(h>=5&&h<6)unlockSecret('sc_dawn');
   if(S.tp2>=10000)unlockSecret('sc_tap10k');
   if(S.pc>=5)unlockSecret('sc_prestige');
   if(S.pc>=10)unlockSecret('sc_veteran');
@@ -1585,12 +1840,18 @@ function checkSecrets(){
   if((S.cr['cosmos']||0)>=1)unlockSecret('sc_cosmos');
   if(Date.now()-_lastAct>=3600000)unlockSecret('sc_patient');
   if(tc>=CR.length)unlockSecret('sc_rainbow');
+  // 追加シークレット
+  if(_loginStreak>=7)unlockSecret('sc_streak');
+  const playMin=Math.floor(((S._totalPlayMs||0))/60000);
+  if(playMin>=120)unlockSecret('sc_marathon');
+  if(CR.some(c=>c.id!=='chibi_dragon'&&(S.cr[c.id]||0)>=500))unlockSecret('sc_collector');
 }
 
 // ===== セーブ・ロード =====
 function saveGame(){
   try{
-    const data={S,secretFound,tutDone,tutStep,curTab,_masterDone,_questDone,_dailyMissionDate,_dailyMissionIdx,_dailyMissionDone,_dailyTaps,_dailyHatch,_dailyRare};
+    const data={S,secretFound,tutDone,tutStep,curTab,_masterDone,_questDone,_dailyMissionDate,_dailyMissionIdx,_dailyMissionDone,_dailyTaps,_dailyHatch,_dailyRare,_loginStreak,_lastLoginDate};
+    data._lastClose=Date.now();
     localStorage.setItem('tamagoSave',JSON.stringify(data));
   }catch(e){}
 }
@@ -1609,6 +1870,21 @@ function loadGame(){
     if(data._questDone)Object.assign(_questDone,data._questDone);
     if(data._dailyMissionDate){_dailyMissionDate=data._dailyMissionDate;_dailyMissionIdx=data._dailyMissionIdx||0;_dailyMissionDone=data._dailyMissionDone||false;_dailyTaps=data._dailyTaps||0;_dailyHatch=data._dailyHatch||0;_dailyRare=data._dailyRare||0;}
     if(data.tutDone!==undefined){tutDone=data.tutDone;tutStep=data.tutStep||0;}
+    if(data._loginStreak)_loginStreak=data._loginStreak;
+    if(data._lastLoginDate)_lastLoginDate=data._lastLoginDate;
+    // ===== 旧バージョン用マイグレーション =====
+    // 指の鍛錬・コンボ強化・CRIT率は廃止 → S.ub から削除＆ステータスリセット
+    if(S.ub){
+      for(let i=1;i<=15;i++)delete S.ub['fp'+i];
+    }
+    S.tp=1;
+    delete S._critRateB;
+    delete S._jackRateB;
+    delete S._coreComboTime;
+    delete S._coreComboMax;
+    delete S.combo;
+    delete S.ct;
+    delete S._recMaxCombo;
     // 購入済み強化を再適用
     UPG.forEach(u=>{if(S.ub[u.id])u.ap();});
     // 既解放済み卵を_unlockedEggsに復元（通知を出さない）
@@ -1620,7 +1896,43 @@ function loadGame(){
     }
     // 卵のSVGを更新
     try{updateEgg(S.ce||'n');}catch(e){}
+    // ===== オフライン進行 =====
+    if(data._lastClose&&tutDone){
+      const sec=Math.floor((Date.now()-data._lastClose)/1000);
+      // 30秒以上空いていたら計算（1秒未満は誤差）。最大8時間まで。
+      if(sec>=30){
+        const cap=Math.min(sec,8*3600);
+        // 効率は通常の50%（放置すると有利になりすぎないように）
+        const gain=Math.floor(eps()*cap*0.5);
+        if(gain>0){
+          S.eg+=gain;
+          _offlineGain={sec:cap,gain};
+        }
+      }
+    }
   }catch(e){console.error('load error',e);}
+}
+let _offlineGain=null;
+function showOfflineModal(){
+  if(!_offlineGain)return;
+  const {sec,gain}=_offlineGain;
+  const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);
+  const tStr=h>0?h+'時間'+m+'分':(m>0?m+'分':sec+'秒');
+  const html='<div id="off-mod" onclick="closeOfflineModal()" style="position:absolute;inset:0;background:rgba(0,0,0,0.55);z-index:550;display:flex;align-items:center;justify-content:center">'
+    +'<div onclick="event.stopPropagation()" style="background:white;border-radius:22px;border:3px solid var(--pkm);padding:24px 22px;max-width:300px;width:88%;text-align:center">'
+    +'<div style="font-size:48px">💤</div>'
+    +'<div style="font-size:18px;font-weight:900;color:var(--pk);margin-top:6px">おかえり！</div>'
+    +'<div style="font-size:12px;color:#888;margin-top:4px">'+tStr+'のあいだ、生き物たちが頑張ってくれたよ</div>'
+    +'<div style="background:linear-gradient(135deg,#fff8e0,#fff0f8);border-radius:14px;padding:14px;margin:14px 0;font-size:14px;font-weight:900;color:#e08000">+'+fmt(gain)+' かけら 💰</div>'
+    +'<button onclick="closeOfflineModal()" style="width:100%;padding:11px;border-radius:11px;border:2px solid var(--pk);background:linear-gradient(135deg,var(--pk),#ff9de2);color:white;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">うけとる！</button>'
+    +'</div></div>';
+  const d=document.createElement('div');d.innerHTML=html;
+  document.getElementById('app').appendChild(d.firstChild);
+}
+function closeOfflineModal(){
+  const m=document.getElementById('off-mod');if(m)m.remove();
+  _offlineGain=null;
+  render();
 }
 
 // ===== ゴールデンタイム =====
@@ -1648,11 +1960,13 @@ function checkGoldenTime(){
 let _happyActive=false,_happyTimer=null,_happyTaps=0;
 function spawnHappyEgg(){
   if(_happyActive||!tutDone)return;
-  if(Math.random()<0.0002){
+  // 頻度を約3倍に（0.0002→0.0006）— 100msごとなのでだいたい3分に1回
+  if(Math.random()<0.0006){
     _happyActive=true;_happyTaps=0;
     const ew=document.getElementById('ew');
-    if(ew){ew.style.filter='drop-shadow(0 0 16px gold)';ew.style.transform='scale(1.12)';}
-    showN('🌟 ラッキーエッグ出現！10秒以内にタップ！');
+    if(ew){ew.style.filter='drop-shadow(0 0 16px gold) drop-shadow(0 0 32px #ffcc00)';ew.style.transform='scale(1.15)';}
+    showN('🌟 ラッキーエッグ出現！10秒以内にタップ連打！');
+    vib([20,30,20]);
     _happyTimer=setTimeout(()=>{
       if(!_happyActive)return;
       _happyActive=false;
@@ -1664,12 +1978,15 @@ function spawnHappyEgg(){
 function checkHappyTap(){
   if(!_happyActive)return;
   _happyTaps++;
-  S.eg+=_happyTaps*15;
+  S.eg+=_happyTaps*5;
   if(_happyTaps>=5){
     _happyActive=false;clearTimeout(_happyTimer);
     const ew=document.getElementById('ew');
     if(ew){ew.style.filter='';ew.style.transform='';}
-    S.eg+=500;showN('🌟 ラッキー完了！+500かけら！');
+    const bonus=Math.max(150,Math.floor(eps()*8));
+    S.eg+=bonus;showN('🌟 ラッキー完了！+'+fmt(bonus)+'かけら！');
+    vib([30,20,30,20,50]);
+    try{spawnConfetti(15,['#ffd700','#ff80c0','#80ffff']);}catch(e){}
   }
 }
 
@@ -1701,71 +2018,6 @@ function showUnknownModal(id){
   const nb=document.getElementById('hp-new');if(nb)nb.style.display='none';
   p.style.display='block';clearTimeout(p._t);p._t=setTimeout(()=>p.style.display='none',4000);
 }
-
-// 動物ウォーカー（ez全体を自由に歩く）
-function spawnWalker(){
-  const owned=CR.filter(x=>(S.cr[x.id]||0)>0);
-  if(!owned.length)return;
-  const area=document.getElementById('walker-area');
-  if(!area)return;
-  if(area.querySelectorAll('.wk-wrap').length>=3)return;
-  const cr=owned[Math.floor(Math.random()*owned.length)];
-  const wrap=document.createElement('div');
-  wrap.className='wk-wrap';
-  wrap.style.cssText='position:absolute;pointer-events:none';
-  const icon=document.createElement('div');
-  const spd=(0.8+Math.random()*0.5).toFixed(2);
-  icon.style.cssText='font-size:22px;display:inline-block;animation:wkWalk '+spd+'s ease-in-out infinite;transform-origin:bottom center;--fx:1';
-  icon.textContent=cr.icon;
-  wrap.appendChild(icon);
-  const aw=area.offsetWidth||280, ah=area.offsetHeight||220;
-  let x=Math.random()*(aw-30)+5;
-  let y=Math.random()*(ah-40)+10;
-  let vx=(Math.random()<0.5?1:-1)*(0.3+Math.random()*0.5);
-  let vy=(Math.random()-0.5)*0.3;
-  let sleeping=false,sleepTimer=0;
-  wrap.style.left=x+'px'; wrap.style.bottom=y+'px';
-  area.appendChild(wrap);
-  let alive=true;
-  const move=()=>{
-    if(!alive||!wrap.parentNode)return;
-    const cw=area.offsetWidth||aw, ch=area.offsetHeight||ah;
-    sleepTimer--;
-    if(!sleeping&&sleepTimer<=0&&Math.random()<0.002){
-      // 寝る
-      sleeping=true;
-      icon.style.animation='none';
-      icon.style.transform='scaleX('+(vx>0?1:-1)+') rotate(90deg)';
-      icon.style.fontSize='20px';
-      sleepTimer=150+Math.floor(Math.random()*200);
-    } else if(sleeping&&sleepTimer<=0){
-      // 起きる
-      sleeping=false;
-      icon.style.animation='wkWalk '+spd+'s ease-in-out infinite';
-      icon.style.transform='';
-      icon.style.fontSize='22px';
-      sleepTimer=60;
-    }
-    if(!sleeping){
-      x+=vx; y+=vy;
-      vx+=(Math.random()-0.5)*0.03;
-      vy+=(Math.random()-0.5)*0.02;
-      vx=Math.max(-0.8,Math.min(0.8,vx));
-      vy=Math.max(-0.4,Math.min(0.4,vy));
-      if(x<5){x=5;vx=Math.abs(vx);}
-      else if(x>cw-28){x=cw-28;vx=-Math.abs(vx);}
-      if(y<8){y=8;vy=Math.abs(vy);}
-      else if(y>ch-30){y=ch-30;vy=-Math.abs(vy);}
-      icon.style.setProperty('--fx', vx>0?1:-1);
-      wrap.style.left=x+'px';
-      wrap.style.bottom=y+'px';
-    }
-    requestAnimationFrame(move);
-  };
-  requestAnimationFrame(move);
-  setTimeout(()=>{alive=false;try{wrap.remove();}catch(e){}},20000+Math.random()*15000);
-}
-setInterval(()=>{if(curTab==='main')spawnWalker();},3500);
 
 // ===== クエストシステム =====
 const QUESTS=[
@@ -1927,8 +2179,9 @@ function getTotalAtk(){
   const atkB=_globalAtkBonus||1;
   const _rabB=1+(S._rebornAtkBonus||0);
   const _coreA=S._coreAtkB||1;
+  const _luckyAtk=S._luckyAtkUp?2:1;
   const _startBoost=(S._coreStartBoost&&S._prestigeTime&&Date.now()-S._prestigeTime<60000)?3:1;
-  return Math.floor((cdAtk+a*synB*atkB)*_rabB*_coreA*_startBoost*10)/10;
+  return Math.floor((cdAtk+a*synB*atkB)*_rabB*_coreA*_startBoost*_luckyAtk*10)/10;
 }
 function getCharAtk(){
   // キャラのみの攻撃力合計
@@ -1961,18 +2214,8 @@ function canEvolveEgg(){
 }
 function evolveEgg(){const nxt=canEvolveEgg();if(!nxt)return;if(!confirm(nxt.name+'に進化します！\n前の卵には戻れません。\n本当にいいですか？'))return;S.ce=nxt.id;updateEgg(nxt.id);showN('🥚 '+nxt.name+'に進化！');render();saveGame();}
 
-// ===== デバッグ機能（開発中のみ） =====
-const DEBUG_MODE=true;
-let _debugHold=null;
-function debugStartHold(){
-  if(!DEBUG_MODE)return;
-  _debugHold=setInterval(()=>{
-    tap({clientX:0,clientY:0});
-  },50);
-}
-function debugEndHold(){
-  if(_debugHold){clearInterval(_debugHold);_debugHold=null;}
-}
+// ===== デバッグ機能（無効化） =====
+const DEBUG_MODE=false;
 let _globalAtkBonus=1;
 
 // ===== コア結晶永続強化 =====
@@ -1999,8 +2242,6 @@ const CORE_UPG=[
   {id:'co_e1',  icon:'🌱',name:'卵の加護',         desc:'きんいろ以降の卵の防御力を永続-20%', cost:5,   req:null,    ap:()=>{S._coreEggDef=(S._coreEggDef||1)*0.8;}},
   {id:'co_e2',  icon:'🌿',name:'大地の力',         desc:'全卵の防御力を永続-10%',             cost:15,  req:'co_e1', ap:()=>{S._coreEggDef=(S._coreEggDef||1)*0.9;}},
   {id:'co_e3',  icon:'🌳',name:'世界樹の恵み',     desc:'全卵の防御力を永続-20%',             cost:40,  req:'co_e2', ap:()=>{S._coreEggDef=(S._coreEggDef||1)*0.8;}},
-  {id:'co_t1',  icon:'⏰',name:'時の加速',         desc:'タップのコンボ持続時間+2秒',         cost:8,   req:null,    ap:()=>{S._coreComboTime=(S._coreComboTime||800)+2000;}},
-  {id:'co_t2',  icon:'⏳',name:'時の支配',         desc:'タップのコンボ最大数+10',            cost:20,  req:'co_t1', ap:()=>{S._coreComboMax=(S._coreComboMax||20)+10;}},
   {id:'co_l1',  icon:'🎲',name:'運命の目',         desc:'レア率永続×2（強力！）',            cost:30,  req:null,    ap:()=>{S._coreRmB=(S._coreRmB||1)*2;}},
   {id:'co_l2',  icon:'🌟',name:'星の加護',         desc:'エピック以上の出現率をさらに×1.5',   cost:80,  req:'co_l1', ap:()=>{S._coreEpicB=(S._coreEpicB||1)*1.5;}},
   {id:'co_u1',  icon:'🔥',name:'魂の炎',           desc:'転生後の最初の1分間、全攻撃力×3',    cost:15,  req:null,    ap:()=>{S._coreStartBoost=true;}},
@@ -2208,16 +2449,38 @@ function getHatchRM(){
 
 // 記録システム// 記録システム
 function updateRecords(){
-  S._recMaxCombo=Math.max(S._recMaxCombo||0, S.combo);
   S._recMaxTap=Math.max(S._recMaxTap||0, S.tp2);
 }
+// ===== 連続ログイン =====
+let _loginStreak=0,_lastLoginDate='';
+function checkLoginStreak(){
+  if(!tutDone)return;
+  const today=new Date().toDateString();
+  if(_lastLoginDate===today)return;
+  // 昨日の日付
+  const y=new Date();y.setDate(y.getDate()-1);
+  const yest=y.toDateString();
+  if(_lastLoginDate===yest)_loginStreak++;
+  else _loginStreak=1;
+  _lastLoginDate=today;
+  // 報酬：streakに応じて。7日でループしてリセットボーナス。
+  const rewards=[100,300,800,2000,5000,12000,30000];
+  const idx=Math.min(_loginStreak-1,6);
+  const bonus=Math.floor(rewards[idx]*Math.max(1,eps()/100));
+  S.eg+=bonus;
+  showN('📅 連続ログイン'+_loginStreak+'日目！+'+fmt(bonus)+'かけら');
+  saveGame();
+}
+
 // ===== メインループ =====
 setInterval(()=>{
   _lastAct=Date.now();
   S.lastAct=Date.now();
+  try{cdAutoAttack();}catch(e){}
   try{checkSecrets();}catch(e){}
   try{checkEggUnlocks();}catch(e){}
   try{checkGoldenTime();}catch(e){}
+  try{checkLoginStreak();}catch(e){}
   try{checkQuests();}catch(e){}
   try{checkMaster();}catch(e){}
   try{initDailyMission();}catch(e){}
@@ -2285,7 +2548,6 @@ setInterval(()=>{
       }
     }
   }
-  if(Date.now()-S.ct>1200)S.combo=0;
   S._totalPlayMs=(S._totalPlayMs||0)+100; // 累積プレイ時間
   chkA();render();
 },100);
@@ -2333,6 +2595,8 @@ if(_ezEl){
   });
 }
 render();
+startEgCountUp();
+setTimeout(()=>{try{showOfflineModal();}catch(e){}},600);
 
 
 let _adCount=0,_adDate='';
@@ -2479,7 +2743,6 @@ function buyPack(n){showN('🛒 近日公開予定です！');}
 
 
 
-</script>
 </script>
 <script>
 
