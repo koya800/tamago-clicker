@@ -438,6 +438,11 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
 
 
 
+
+
+
+
+
 const MEMO={
   'chibi_dragon':['ガオッ！（小さいけど本気だよ）','たまごとご主人さま'],
   'chick':['ぴよぴよ！','あたたかいひざのうえ'],
@@ -703,7 +708,7 @@ function getNextLvTh(cnt){
 // ===== データ =====
 const ET=[
   {id:'n', icon:'🥚',name:'ふつうの卵',  unlockAt:0,    tb:1,   th:40,   col:['#fff0f8','#ffb6e8','#ff9de2'], def:0},
-  {id:'g', icon:'🌕',name:'きんいろ卵',  unlockAt:30,   tb:2,   th:150,  col:['#fffbe0','#ffe066','#f5c518'], def:30},
+  {id:'g', icon:'🌕',name:'きんいろ卵',  unlockAt:60,   tb:2,   th:150,  col:['#fffbe0','#ffe066','#f5c518'], def:30},
   {id:'cr',icon:'💠',name:'クリスタル卵',unlockAt:80,   tb:5,   th:280,  col:['#eef8ff','#80d8ff','#40b8ff'], def:150},
   {id:'fi',icon:'🔥',name:'ほのおの卵',  unlockAt:200,  tb:15,  th:500,  col:['#fff3ee','#ffaa70','#ff6020'], def:600},
   {id:'ic',icon:'❄',name:'こおりの卵',  unlockAt:500,  tb:40,  th:900,  col:['#eef8ff','#a8eeff','#60ccff'], def:2500},
@@ -1200,10 +1205,7 @@ function selEgg(id){
 function render(){
   const tc=tC(),tk=tK(),eg=gE();
   document.getElementById('ec').textContent=fmt(S.eg);
-  const _cdEl2=CR.find(x=>x.id==='chibi_dragon');
-  const _cdEps2=_cdEl2?((_cdEl2.eps*(S.cr['chibi_dragon']||1))):0;
-  const _egPerSec=(_cdEps2+S.bps)*getPrestigeEgBonus()*(S._coreEgB||1);
-  document.getElementById('ps').textContent=fmt(Math.round(_egPerSec*10)/10)+'/秒';
+  document.getElementById('ps').textContent=fmt(Math.round(eps()*10)/10)+'/秒';
   document.getElementById('tc').textContent=fmt(tc);
   try{const _tk=document.getElementById('tk');if(_tk)_tk.textContent=tk+'/'+CR.length;}catch(e){}
   document.getElementById('tt').textContent=fmt(S.tp2);
@@ -1710,32 +1712,32 @@ setInterval(()=>{if(curTab==='main')spawnWalker();},3500);
 // ===== クエストシステム =====
 const QUESTS=[
   // 序盤クエスト
-  {id:'q_first',   icon:'🥚', name:'はじめての孵化',    desc:'生き物を1匹孵化させよう',      ck:()=>tC()>=1,      bonus:50,   eg:true},
-  {id:'q_tap10',   icon:'👆', name:'タップ入門',        desc:'10回タップしよう',              ck:()=>S.tp2>=10,    bonus:30,   eg:true},
-  {id:'q_5kinds',  icon:'📖', name:'図鑑デビュー',      desc:'5種類の生き物を発見しよう',     ck:()=>tK()>=5,      bonus:200,  eg:true},
-  {id:'q_buy1',    icon:'⛏', name:'はじめての強化',    desc:'強化アイテムを1つ買おう',       ck:()=>Object.keys(S.ub).length>=1, bonus:300, eg:true},
-  {id:'q_10hatch', icon:'🐣', name:'孵化マスター入門',  desc:'合計10匹孵化させよう',          ck:()=>tC()>=10,     bonus:150,  eg:true},
+  {id:'q_first',   icon:'🥚', name:'はじめての孵化',    desc:'生き物を1匹孵化させよう',      ck:()=>tC()>=1,      bonus:25,   eg:true},
+  {id:'q_tap10',   icon:'👆', name:'タップ入門',        desc:'10回タップしよう',              ck:()=>S.tp2>=10,    bonus:15,   eg:true},
+  {id:'q_5kinds',  icon:'📖', name:'図鑑デビュー',      desc:'5種類の生き物を発見しよう',     ck:()=>tK()>=5,      bonus:100,  eg:true},
+  {id:'q_buy1',    icon:'⛏', name:'はじめての強化',    desc:'強化アイテムを1つ買おう',       ck:()=>Object.keys(S.ub).length>=1, bonus:150, eg:true},
+  {id:'q_10hatch', icon:'🐣', name:'孵化マスター入門',  desc:'合計10匹孵化させよう',          ck:()=>tC()>=10,     bonus:75,   eg:true},
   // 中盤クエスト
-  {id:'q_rare1',   icon:'⭐', name:'レア発見！',        desc:'レアキャラを1匹孵化させよう',   ck:()=>CR.some(x=>x.r==='R'&&(S.cr[x.id]||0)>0), bonus:500, eg:true},
-  {id:'q_gold',    icon:'🌕', name:'きんいろ卵デビュー',desc:'きんいろ卵を解放しよう',        ck:()=>tC()>=40,     bonus:400,  eg:true},
-  {id:'q_20kinds', icon:'🦎', name:'図鑑中級',          desc:'20種類の生き物を集めよう',      ck:()=>tK()>=20,     bonus:1000, eg:true},
-  {id:'q_100tap',  icon:'💪', name:'タップ戦士',        desc:'500回タップしよう',             ck:()=>S.tp2>=500,   bonus:600,  eg:true},
+  {id:'q_rare1',   icon:'⭐', name:'レア発見！',        desc:'レアキャラを1匹孵化させよう',   ck:()=>CR.some(x=>x.r==='R'&&(S.cr[x.id]||0)>0), bonus:250, eg:true},
+  {id:'q_gold',    icon:'🌕', name:'きんいろ卵デビュー',desc:'きんいろ卵を解放しよう',        ck:()=>tC()>=40,     bonus:200,  eg:true},
+  {id:'q_20kinds', icon:'🦎', name:'図鑑中級',          desc:'20種類の生き物を集めよう',      ck:()=>tK()>=20,     bonus:500, eg:true},
+  {id:'q_100tap',  icon:'💪', name:'タップ戦士',        desc:'500回タップしよう',             ck:()=>S.tp2>=500,   bonus:300,  eg:true},
   // 後半クエスト
-  {id:'q_epic1',   icon:'💫', name:'エピック発見！',    desc:'エピックキャラを孵化させよう',  ck:()=>CR.some(x=>x.r==='E'&&(S.cr[x.id]||0)>0), bonus:3000, eg:true},
-  {id:'q_prestige',icon:'✨', name:'転生チャレンジ',   desc:'初めて転生しよう',              ck:()=>S.pc>=1,      bonus:5000, eg:true},
-  {id:'q_50kinds', icon:'👑', name:'図鑑上級',          desc:'50種類の生き物を集めよう',      ck:()=>tK()>=50,     bonus:8000, eg:true},
-  {id:'q_legend1', icon:'🌟', name:'レジェンド発見！',  desc:'レジェンドキャラを孵化させよう',ck:()=>CR.some(x=>x.r==='L'&&(S.cr[x.id]||0)>0), bonus:15000,eg:true},
-  {id:'q_10k',     icon:'🏆', name:'大牧場主',          desc:'合計1万匹孵化させよう',         ck:()=>tC()>=10000,  bonus:20000,eg:true},
+  {id:'q_epic1',   icon:'💫', name:'エピック発見！',    desc:'エピックキャラを孵化させよう',  ck:()=>CR.some(x=>x.r==='E'&&(S.cr[x.id]||0)>0), bonus:1500, eg:true},
+  {id:'q_prestige',icon:'✨', name:'転生チャレンジ',   desc:'初めて転生しよう',              ck:()=>S.pc>=1,      bonus:2500, eg:true},
+  {id:'q_50kinds', icon:'👑', name:'図鑑上級',          desc:'50種類の生き物を集めよう',      ck:()=>tK()>=50,     bonus:4000, eg:true},
+  {id:'q_legend1', icon:'🌟', name:'レジェンド発見！',  desc:'レジェンドキャラを孵化させよう',ck:()=>CR.some(x=>x.r==='L'&&(S.cr[x.id]||0)>0), bonus:7500,eg:true},
+  {id:'q_10k',     icon:'🏆', name:'大牧場主',          desc:'合計1万匹孵化させよう',         ck:()=>tC()>=10000,  bonus:10000,eg:true},
 ];
 
 // デイリーミッション
 const DAILY_MISSIONS=[
-  {id:'dm_tap',    icon:'👆', name:'タップデイリー',    desc:'今日200回タップしよう',   ck:()=>_dailyTaps>=200,  bonus:200},
-  {id:'dm_hatch',  icon:'🥚', name:'孵化デイリー',      desc:'今日20匹孵化させよう',    ck:()=>_dailyHatch>=20,  bonus:300},
-  {id:'dm_rare',   icon:'⭐', name:'レアハントデイリー', desc:'今日レア以上を1匹孵化',   ck:()=>_dailyRare>=1,    bonus:500},
-  {id:'dm_tap2',   icon:'💪', name:'タップ強者',        desc:'今日500回タップしよう',   ck:()=>_dailyTaps>=500,  bonus:500},
-  {id:'dm_hatch2', icon:'🐣', name:'孵化職人',          desc:'今日50匹孵化させよう',    ck:()=>_dailyHatch>=50,  bonus:800},
-  {id:'dm_kinds',  icon:'📖', name:'図鑑探索',          desc:'今日3種類以上の新キャラ', ck:()=>_dailyNewKinds>=3,bonus:1000},
+  {id:'dm_tap',    icon:'👆', name:'タップデイリー',    desc:'今日200回タップしよう',   ck:()=>_dailyTaps>=200,  bonus:100},
+  {id:'dm_hatch',  icon:'🥚', name:'孵化デイリー',      desc:'今日20匹孵化させよう',    ck:()=>_dailyHatch>=20,  bonus:150},
+  {id:'dm_rare',   icon:'⭐', name:'レアハントデイリー', desc:'今日レア以上を1匹孵化',   ck:()=>_dailyRare>=1,    bonus:250},
+  {id:'dm_tap2',   icon:'💪', name:'タップ強者',        desc:'今日500回タップしよう',   ck:()=>_dailyTaps>=500,  bonus:250},
+  {id:'dm_hatch2', icon:'🐣', name:'孵化職人',          desc:'今日50匹孵化させよう',    ck:()=>_dailyHatch>=50,  bonus:400},
+  {id:'dm_kinds',  icon:'📖', name:'図鑑探索',          desc:'今日3種類以上の新キャラ', ck:()=>_dailyNewKinds>=3,bonus:500},
 ];
 
 let _questDone={}; // クリア済みクエスト
@@ -2027,6 +2029,20 @@ function checkHiddenChars(){
 }
 function getRM(){return S.rm*(S._coreRmB||1);}
 
+// ===== 激レア限定キャラ =====
+const BOSS_CR=[
+  {id:'b_leviathan', icon:'🐋',name:'レヴィアタン',  r:'U',w:300,eps:5.0, atk:0.3,  eggs:['boss']},
+  {id:'b_cerberus',  icon:'🐕',name:'ケルベロス',    r:'U',w:280,eps:6.0, atk:0.35, eggs:['boss']},
+  {id:'b_sphinx',    icon:'🦁',name:'スフィンクス',   r:'R',w:150,eps:10.0,atk:0.8,  eggs:['boss']},
+  {id:'b_chimera',   icon:'🐐',name:'キメラ',        r:'R',w:130,eps:12.0,atk:1.0,  eggs:['boss']},
+  {id:'b_medusa',    icon:'🐍',name:'メドゥーサ',    r:'R',w:120,eps:15.0,atk:1.2,  eggs:['boss']},
+  {id:'b_minotaur',  icon:'🐂',name:'ミノタウロス',   r:'E',w:40, eps:25.0,atk:3.0,  eggs:['boss']},
+  {id:'b_valkyrie',  icon:'🗡',name:'ヴァルキリー',  r:'E',w:35, eps:30.0,atk:4.0,  eggs:['boss']},
+  {id:'b_fenrir',    icon:'🐺',name:'フェンリル',    r:'E',w:30, eps:40.0,atk:5.0,  eggs:['boss']},
+  {id:'b_thor',      icon:'⚡',name:'雷神トール',    r:'L',w:4,  eps:100.0,atk:15.0, eggs:['boss']},
+  {id:'b_ragnarok',  icon:'🌌',name:'ラグナロク',    r:'L',w:2,  eps:200.0,atk:30.0, eggs:['boss']},
+];
+
 // ===== 激レア卵システム =====
 let _superEggActive=false;
 
@@ -2081,12 +2097,11 @@ setInterval(()=>{
       const _atk2=getTotalAtk(),_net2=Math.floor(Math.max(0,_atk2-_def));
       if(_def>0){
         const _col2=_net2>0?'#50a050':'#c04040';
-        _atkEl.innerHTML='<div style="display:flex;gap:6px;justify-content:center;font-size:10px;font-weight:900">'
-          +'<span style="color:#4080c0">⚔'+_atk2+'</span>'
-          +'<span style="color:#c04040">🛡'+fmt(_def)+'</span>'
-          +'<span style="color:'+_col2+'">'+(_net2>0?'ダメージ+'+_net2:'攻撃力不足！')+'</span></div>';
+        _atkEl.innerHTML='<div style="text-align:center;font-size:10px;font-weight:900">'
+          +'<span style="color:#c04040">🛡️ 卵の防御力: '+fmt(_def)+'</span>'
+          +'　<span style="color:'+_col2+'">'+(_net2>0?'ダメージ+'+_net2:'⚠️ 攻撃力が足りない！')+'</span></div>';
       } else {
-        _atkEl.innerHTML='<div style="text-align:center;font-size:10px;color:#50a050;font-weight:900">🛡 防御力0（自由に割れる）</div>';
+        _atkEl.innerHTML='';
       }
     }
     // 進化ボタン更新
@@ -2117,7 +2132,17 @@ setInterval(()=>{
     const _tc=tC();
     if(_tc>=_eg.unlockAt){
       if(typeof S.tpg==='number')S.tpg={n:S.tpg,g:0,cr:0,fi:0,ic:0,ga:0,ra:0,sp:0};
-      // 孵化メーターはタップのみ（自動孵化メーター更新なし）
+      // 放置中の自動孵化（タップの5%速度、かなりゆっくり）
+      const _netDmgAuto=getNetDmg(_eg);
+      if(_netDmgAuto>0){
+        S.tpg[_eg.id]=(S.tpg[_eg.id]||0)+_netDmgAuto*0.05;
+        while((S.tpg[_eg.id]||0)>=_eg.th){
+          S.tpg[_eg.id]-=_eg.th;
+          hatch(_eg);
+          S._hatchCount=(S._hatchCount||0)+1;
+          try{checkSuperEgg();}catch(e){}
+        }
+      }
     }
   }
   if(Date.now()-S.ct>1200)S.combo=0;
@@ -2192,6 +2217,11 @@ function watchAd(type){
 }
 function removAds(){showN('🚫 近日公開予定です！');}
 function buyPack(n){showN('🛒 近日公開予定です！');}
+
+
+
+
+
 
 
 
