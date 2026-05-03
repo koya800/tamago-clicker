@@ -79,6 +79,17 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
 /* フロート */
 #fl{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:50;}
 .fn{position:absolute;font-size:13px;font-weight:900;font-family:'M PLUS Rounded 1c','Nunito',sans-serif;animation:fu .8s forwards;pointer-events:none;letter-spacing:0.5px;}
+@keyframes superEggPulse{
+  0%{transform:scale(1.0);filter:drop-shadow(0 0 10px gold);}
+  100%{transform:scale(1.08);filter:drop-shadow(0 0 30px gold) drop-shadow(0 0 60px #ffcc00);}
+}
+@keyframes bossShake{
+  0%{transform:translate(0,0) scale(1.05);}
+  25%{transform:translate(-3px,2px) scale(1.08);}
+  50%{transform:translate(3px,-2px) scale(1.05);}
+  75%{transform:translate(-2px,3px) scale(1.08);}
+  100%{transform:translate(0,0) scale(1.05);}
+}
 @keyframes fu{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-60px)}}
 /* ポップアップ */
 #hp{display:none;position:absolute;top:36%;left:50%;transform:translate(-50%,-50%);background:white;border:3px solid var(--pkm);border-radius:22px;padding:20px 28px;text-align:center;z-index:100;animation:pi .2s;max-width:260px;width:80%;}
@@ -420,6 +431,11 @@ body{font-family:'Nunito',sans-serif;background:#fff8fd;display:flex;flex-direct
 
 
 
+
+
+
+
+
 const MEMO={
   'chibi_dragon':['ガオッ！（小さいけど本気だよ）','たまごとご主人さま'],
   'chick':['ぴよぴよ！','あたたかいひざのうえ'],
@@ -525,6 +541,16 @@ function checkRhythm(){
       chkA();
     }
     _rtaps=[];
+    // 記録パネル
+    const _rp=document.getElementById('rec-panel');
+    if(_rp){
+      const _fh=S._recFastHatch?((S._recFastHatch/1000).toFixed(1)+'秒'):'未計測';
+      _rp.innerHTML='<div>👆 最高タップ数: <b>'+fmt(S._recMaxTap)+'回</b></div>'
+        +'<div>🔥 最多コンボ: <b>'+fmt(S._recMaxCombo)+'回</b></div>'
+        +'<div>⚡ 最短孵化タイム: <b>'+_fh+'</b></div>'
+        +'<div>👹 ボス撃破数: <b>'+(S._bossCount||0)+'回</b></div>'
+        +'<div>🥚 総孵化数: <b>'+fmt(S._hatchCount||0)+'回</b></div>';
+    }
   }
 }
 // ===== 音声 =====
@@ -859,7 +885,7 @@ const RC={C:'#888',U:'#5b9cf6',R:'#f5c518',E:'#b06ee0',L:'#ff8c42'};
 const RN={C:'コモン',U:'アンコモン',R:'レア',E:'エピック',L:'レジェンド'};
 
 // ===== ゲーム状態 =====
-let S={eg:0,tp:1,bps:0,rm:1,tp2:0,pc:0,pc2:0,cu:{},tpg:{n:0,g:0,cr:0,fi:0,ic:0,ga:0,ra:0,sp:0},ce:'n',cr:{},ub:{},ad:{},dd:'',combo:0,ct:0,lastAct:0};
+let S={eg:0,tp:1,bps:0,rm:1,tp2:0,pc:0,pc2:0,cu:{},_hatchCount:0,_bossCount:0,_recMaxCombo:0,_recMaxTap:0,_recFastHatch:null,_lastHatchTime:null,tpg:{n:0,g:0,cr:0,fi:0,ic:0,ga:0,ra:0,sp:0},ce:'n',cr:{},ub:{},ad:{},dd:'',combo:0,ct:0,lastAct:0};
 let curTab='main';
 const fmt=n=>n>=1e12?(n/1e12).toFixed(1)+'T':n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=100000?(n/1000).toFixed(0)+'K':Math.floor(n)+'';
 const tC=()=>Object.values(S.cr).reduce((a,b)=>a+b,0);
@@ -911,7 +937,20 @@ function tap(ev){
   const w=document.getElementById('ew');
   w.classList.remove('pop');void w.offsetWidth;w.classList.add('pop');
   spF(ev,fmt(Math.round(actualDmg*10)/10),eg.col[0]);
-  while((S.tpg[eg.id]||0)>=eg.th){S.tpg[eg.id]-=eg.th;hatch(eg);}
+  while((S.tpg[eg.id]||0)>=eg.th){
+      S.tpg[eg.id]-=eg.th;
+      hatch(eg);
+      S._hatchCount=(S._hatchCount||0)+1;
+      try{checkSuperEgg();}catch(e){}
+      // 最短孵化タイム記録
+      const now2=Date.now();
+      if(S._lastHatchTime){
+        const t=now2-S._lastHatchTime;
+        if(!S._recFastHatch||t<S._recFastHatch)S._recFastHatch=t;
+      }
+      S._lastHatchTime=Date.now();
+  }
+  updateRecords();
   try{checkRhythm();}catch(e){}
   _dailyTaps++;
 
@@ -925,6 +964,25 @@ function hatch(eg,mode){
   if(!pool.length)return;
   const wa=pool.map(c=>{
     let w=c.w;
+    // 激レア卵発動中はBOSS_CR限定キャラから排出
+    if(_superEggActive){
+      const bossPool=BOSS_CR;
+      const tot2=bossPool.reduce((s,x)=>s+x.w,0);
+      let rv2=Math.random()*tot2,bc=bossPool[0];
+      for(const x of bossPool){rv2-=x.w;if(rv2<=0){bc=x;break;}}
+      const prev2=S.cr[bc.id]||0;
+      S.cr[bc.id]=prev2+1;
+      // 激レア後リセット
+      _superEggActive=false;
+      const ew2=document.getElementById('ew');
+      if(ew2){ew2.style.filter='';ew2.style.animation='';}
+      if(bc.r==='L')sndLegend();
+      else if(bc.r==='E')sndRare();
+      else sndHatch();
+      showH(bc,prev2);
+      try{checkHiddenChars();}catch(e){}
+      return;
+    }
     const rm=getRM();
     const _epicB=S._coreEpicB||1;
     if(c.r==='U')w*=Math.pow(rm,0.5);
@@ -1954,7 +2012,31 @@ function checkHiddenChars(){
   });
 }
 function getRM(){return S.rm*(S._coreRmB||1);}
-// ===== メインループ =====
+
+// ===== 激レア卵システム =====
+let _superEggActive=false;
+
+function checkSuperEgg(){
+  // 孵化のたびに1%の確率で激レア卵が発動
+  if(_superEggActive)return;
+  if(Math.random()<0.0005){ // 0.05%
+    _superEggActive=true;
+    const ew=document.getElementById('ew');
+    if(ew){
+      ew.style.filter='drop-shadow(0 0 20px gold) drop-shadow(0 0 40px #ffcc00)';
+      ew.style.animation='superEggPulse 0.8s infinite alternate';
+    }
+    showN('✨ 激レア卵が出現！次の孵化で限定キャラが出る！');
+  }
+}
+
+function getHatchRM(){
+  // 激レア時はレア率を大幅アップ
+  if(_superEggActive)return getRM()*20;
+  return getRM();
+}
+
+// 記録システム// ===== メインループ =====
 setInterval(()=>{
   _lastAct=Date.now();
   S.lastAct=Date.now();
@@ -2091,6 +2173,11 @@ function watchAd(type){
 }
 function removAds(){showN('🚫 近日公開予定です！');}
 function buyPack(n){showN('🛒 近日公開予定です！');}
+
+
+
+
+
 
 
 
