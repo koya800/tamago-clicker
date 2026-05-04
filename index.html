@@ -675,165 +675,117 @@ function checkRhythm(){
     }
   }
 }
-// ===== 音声 =====
+// ===== 音声（HTMLAudioElement版）=====
+// Web Audio API は Android でブチ音問題が発生しやすいため、
+// 動的に WAV ファイルを生成して HTMLAudioElement で再生する方式に変更。
 let audioCtx=null,seEnabled=true,seVol=0.85;
 let _buffers={};
 
-function getACtx(){
-  if(!audioCtx){
-    // sampleRate 指定なし → デバイスのネイティブレート（Android 48000等）でリサンプリング回避
-    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  }
-  if(audioCtx.state==='suspended')audioCtx.resume();
-  return audioCtx;
-}
+// 互換のためのスタブ（visibilitychange 等から呼ばれる）
+function getACtx(){return null;}
+function startAmbientLoop(){}
+function stopAmbientLoop(){}
+function warmUpAudio(){}
+let _audioReadyTime=0;
+let _audioWarmedUp=true; // 不要なので常にtrue扱い
 
-// 初回タップ時にオーディオ出力を「温める」フェード付きノイズ
-// （Android のオーディオハード起動時のブチ音を吸収）
-let _audioWarmedUp=false;
-let _audioReadyTime=0; // この時刻以降に sound 再生を許可
-let _ambientLoop=null;  // 連続無音ループ（オーディオ出力を常時オン）
-
-// オーディオ出力を「常時オン」状態に保つ連続ループ
-// これにより、音と音の合間にも出力デバイスが電源OFFにならず、ブチ音を防ぐ
-function startAmbientLoop(){
-  if(_ambientLoop)return;
+// 波形を WAV データURL として生成
+function makeWavUrl(freqs,durSec,amp){
   try{
-    const ctx=getACtx();
-    const sr=ctx.sampleRate;
-    const len=Math.floor(sr*5); // 5秒のループ
-    const buf=ctx.createBuffer(1,len,sr);
-    const data=buf.getChannelData(0);
-    // 超低周波（人間にほぼ聞こえない 18Hz）の極小サイン波
-    // → 出力デバイスは「音を出してる」と認識して開きっぱなしになる
-    for(let i=0;i<len;i++){
-      const t=i/sr;
-      data[i]=Math.sin(2*Math.PI*18*t)*0.0008;
-    }
-    const src=ctx.createBufferSource();
-    src.buffer=buf;
-    src.loop=true;
-    const g=ctx.createGain();
-    g.gain.value=1;
-    src.connect(g);g.connect(ctx.destination);
-    src.start(ctx.currentTime);
-    _ambientLoop=src;
-  }catch(e){}
-}
-
-function stopAmbientLoop(){
-  if(!_ambientLoop)return;
-  try{_ambientLoop.stop();_ambientLoop.disconnect();}catch(e){}
-  _ambientLoop=null;
-}
-
-function warmUpAudio(){
-  if(_audioWarmedUp)return;
-  _audioWarmedUp=true;
-  try{
-    const ctx=getACtx();
-    const sr=ctx.sampleRate;
-    const dur=0.5; // 500ms（出力デバイスが安定するまで）
-    const len=Math.floor(sr*dur);
-    const buf=ctx.createBuffer(1,len,sr);
-    const data=buf.getChannelData(0);
-    // フェードイン付きの極小ローパスノイズで、出力デバイスをじわっと開ける
-    let smooth=0;
-    for(let i=0;i<len;i++){
-      const t=i/sr;
-      const fadeIn=Math.min(t*5,1); // 200ms フェードイン
-      const fadeOut=Math.max(0,Math.min((dur-t)*5,1));
-      const noise=Math.random()*2-1;
-      smooth=smooth*0.97+noise*0.03;
-      data[i]=smooth*0.003*fadeIn*fadeOut;
-    }
-    const src=ctx.createBufferSource();
-    src.buffer=buf;
-    src.connect(ctx.destination);
-    src.start(ctx.currentTime);
-    src.onended=()=>{
-      try{src.disconnect();}catch(e){}
-      // ウォームアップ完了後、連続ループを開始
-      startAmbientLoop();
-    };
-    _audioReadyTime=Date.now()+(dur*1000)+30;
-  }catch(e){_audioReadyTime=Date.now();}
-}
-
-// 波形をバッファに事前生成
-function makeBuffer(freqs,durSec,amp){
-  try{
-    const ctx=getACtx();
-    const sr=ctx.sampleRate;
+    const sr=44100;
     const len=Math.floor(sr*durSec);
-    const buf=ctx.createBuffer(1,len,sr);
-    const data=buf.getChannelData(0);
     const _amp=amp||0.3;
+    // 16bit PCM データ
+    const dataLen=len*2;
+    const buf=new ArrayBuffer(44+dataLen);
+    const v=new DataView(buf);
+    // RIFF ヘッダ
+    v.setUint32(0,0x52494646,false);  // 'RIFF'
+    v.setUint32(4,36+dataLen,true);   // file size
+    v.setUint32(8,0x57415645,false);  // 'WAVE'
+    v.setUint32(12,0x666d7420,false); // 'fmt '
+    v.setUint32(16,16,true);          // chunk size
+    v.setUint16(20,1,true);           // PCM
+    v.setUint16(22,1,true);           // mono
+    v.setUint32(24,sr,true);          // sample rate
+    v.setUint32(28,sr*2,true);        // byte rate
+    v.setUint16(32,2,true);           // block align
+    v.setUint16(34,16,true);          // bits per sample
+    v.setUint32(36,0x64617461,false); // 'data'
+    v.setUint32(40,dataLen,true);     // data size
+    // サンプル
+    const fadeIn=Math.floor(sr*0.005); // 5ms fade-in
+    const fadeOut=Math.floor(sr*0.025); // 25ms fade-out
     for(let i=0;i<len;i++){
       const t=i/sr;
-      const attack=Math.min(t*200,1); // 素早いattack
-      const decay=Math.exp(-t*12/durSec); // 滑らかなdecay
-      const env=attack*decay;
+      // エンベロープ（多段フェードで完全に滑らか）
+      let env=1;
+      if(i<fadeIn)env*=i/fadeIn;
+      if(i>=len-fadeOut)env*=(len-i)/fadeOut;
+      env*=Math.exp(-t*8/durSec); // 自然減衰
       let s=0;
       freqs.forEach(f=>{s+=Math.sin(2*Math.PI*f*t);});
-      data[i]=(s/freqs.length)*env*_amp;
+      const sample=Math.max(-1,Math.min(1,(s/freqs.length)*env*_amp));
+      v.setInt16(44+i*2,Math.round(sample*32767),true);
     }
-    // 末尾20msを完全ゼロへ（プチプチ防止）
-    const fade=Math.floor(sr*0.02);
-    for(let i=Math.max(0,len-fade);i<len;i++){
-      data[i]*=(len-i)/fade;
-    }
-    // 最後の数サンプルを強制ゼロ
-    for(let i=len-5;i<len;i++) data[i]=0;
-    return buf;
+    const blob=new Blob([buf],{type:'audio/wav'});
+    return URL.createObjectURL(blob);
   }catch(e){return null;}
 }
 
-let _activeSounds=0;
-function playBuf(buf){
-  if(!seEnabled||!buf)return;
-  if(_activeSounds>2)return; // 同時再生数制限を厳しく
-  warmUpAudio(); // 初回のみ実行
-  // ウォームアップ完了前のサウンドは破棄（ブチッ音回避）
-  if(_audioReadyTime===0||Date.now()<_audioReadyTime)return;
-  try{
-    const ctx=getACtx();
-    const src=ctx.createBufferSource();
-    const g=ctx.createGain();
-    g.gain.value=0; // ★明示的に0で開始（GainNodeのデフォルト1から始まる微小グリッチ防止）
-    src.buffer=buf;
-    src.connect(g);
-    g.connect(ctx.destination);
-    const now=ctx.currentTime;
-    const startAt=now+0.008; // 8ms 先送り（オーディオエンジンに準備時間を与える）
-    const fade=0.04; // 40ms フェード（じっくり）
-    const safeFade=Math.min(fade,buf.duration*0.4);
-    g.gain.setValueAtTime(0,startAt);
-    g.gain.linearRampToValueAtTime(seVol,startAt+safeFade);
-    g.gain.setValueAtTime(seVol,startAt+buf.duration-safeFade);
-    g.gain.linearRampToValueAtTime(0,startAt+buf.duration);
-    _activeSounds++;
-    src.start(startAt);
-    src.stop(startAt+buf.duration);
-    src.onended=()=>{
-      _activeSounds=Math.max(0,_activeSounds-1);
-      try{src.disconnect();g.disconnect();}catch(e){}
-    };
-  }catch(e){}
+// 同時再生のため複数の Audio 要素プールを持つ
+function makeAudioPool(url,size){
+  const pool=[];
+  for(let i=0;i<size;i++){
+    const a=new Audio(url);
+    a.preload='auto';
+    a.volume=seVol;
+    pool.push(a);
+  }
+  return pool;
 }
 
-// バッファを事前に作る（初回タップ時）
+let _audioPools={};
 let _bufsReady=false;
 function initBufs(){
   if(_bufsReady)return;
   _bufsReady=true;
   try{
-    _buffers.tap=makeBuffer([440],0.08,0.9);  // タップ音は強め（卵を叩く感じ）
-    _buffers.hatch=makeBuffer([523,659],0.15);
-    _buffers.rare=makeBuffer([523,659,784,1047],0.4);
-    _buffers.legend=makeBuffer([523,659,784,880,1047],0.6);
-    _buffers.secret=makeBuffer([392,523,659,784,1047],0.7);
-    _buffers.buy=makeBuffer([523,784,1047],0.22);  // 購入：明るい上昇和音
+    _audioPools.tap=makeAudioPool(makeWavUrl([440],0.07,0.7),4);
+    _audioPools.hatch=makeAudioPool(makeWavUrl([523,659],0.15,0.4),2);
+    _audioPools.rare=makeAudioPool(makeWavUrl([523,659,784,1047],0.4,0.4),2);
+    _audioPools.legend=makeAudioPool(makeWavUrl([523,659,784,880,1047],0.6,0.5),2);
+    _audioPools.secret=makeAudioPool(makeWavUrl([392,523,659,784,1047],0.7,0.5),2);
+    _audioPools.buy=makeAudioPool(makeWavUrl([523,784,1047],0.22,0.4),2);
+  }catch(e){}
+}
+
+// プールから空いてる Audio を取って再生
+function playPool(name){
+  if(!seEnabled)return;
+  initBufs();
+  const pool=_audioPools[name];
+  if(!pool)return;
+  // 空いてる（再生中でない）ものを探す
+  for(let i=0;i<pool.length;i++){
+    const a=pool[i];
+    if(a.paused||a.ended){
+      try{
+        a.volume=seVol;
+        a.currentTime=0;
+        const p=a.play();
+        if(p&&p.catch)p.catch(()=>{});
+      }catch(e){}
+      return;
+    }
+  }
+  // 全部再生中：最初のを強制再再生
+  try{
+    const a=pool[0];
+    a.volume=seVol;
+    a.currentTime=0;
+    const p=a.play();
+    if(p&&p.catch)p.catch(()=>{});
   }catch(e){}
 }
 
@@ -841,15 +793,15 @@ let _lastTapSnd=0;
 function sndTap(){
   if(!seEnabled)return;
   const now=Date.now();
-  if(now-_lastTapSnd<120)return; // 120ms以内の連打音を間引き
+  if(now-_lastTapSnd<80)return;
   _lastTapSnd=now;
-  initBufs();playBuf(_buffers.tap);
+  playPool('tap');
 }
-function sndHatch(){if(!seEnabled)return;initBufs();playBuf(_buffers.hatch);}
-function sndRare(){if(!seEnabled)return;initBufs();playBuf(_buffers.rare);}
-function sndLegend(){if(!seEnabled)return;initBufs();playBuf(_buffers.legend);}
-function sndSecret(){if(!seEnabled)return;initBufs();playBuf(_buffers.secret);}
-function sndBuy(){if(!seEnabled)return;initBufs();playBuf(_buffers.buy);}
+function sndHatch(){playPool('hatch');}
+function sndRare(){playPool('rare');}
+function sndLegend(){playPool('legend');}
+function sndSecret(){playPool('secret');}
+function sndBuy(){playPool('buy');}
 function toggleSE(){
   seEnabled=!seEnabled;
   const tog=document.getElementById('se-tog');
@@ -857,7 +809,13 @@ function toggleSE(){
   if(tog)tog.style.background=seEnabled?'#ff9de2':'#ccc';
   if(knob)knob.style.left=seEnabled?'22px':'2px';
 }
-function setSeVol(v){seVol=v/100;}
+function setSeVol(v){
+  seVol=v/100;
+  // 全 Audio プールに反映
+  Object.values(_audioPools||{}).forEach(pool=>{
+    pool.forEach(a=>{try{a.volume=seVol;}catch(e){}});
+  });
+}
 function toggleVib(){
   _vibEnabled=!_vibEnabled;
   const tog=document.getElementById('vib-tog');
@@ -1194,7 +1152,7 @@ function checkHatchMilestone(){
 }
 
 // ===== アプリバージョン =====
-const APP_VERSION='1.0.8'; // 更新ごとに+1
+const APP_VERSION='1.0.9'; // 更新ごとに+1
 const APP_BUILD_DATE='2026-05-04'; // ビルド日
 
 // ===== ゲーム状態 =====
@@ -1267,19 +1225,19 @@ function tap(ev){
   const w=document.getElementById('ew');
   w.classList.remove('pop');void w.offsetWidth;w.classList.add('pop');
   spF(ev,fmt(actualDmg),eg.col[0]);
-  while((S.tpg[eg.id]||0)>=eg.th){
-      S.tpg[eg.id]-=eg.th;
-      hatch(eg);
-      S._hatchCount=(S._hatchCount||0)+1;
-      try{checkSuperEgg();}catch(e){}
-      try{checkHatchMilestone();}catch(e){}
-      // 最短孵化タイム記録
-      const now2=Date.now();
-      if(S._lastHatchTime){
-        const t=now2-S._lastHatchTime;
-        if(!S._recFastHatch||t<S._recFastHatch)S._recFastHatch=t;
-      }
-      S._lastHatchTime=Date.now();
+  // 1タップで1体だけ孵化（攻撃力がオーバーしても複数生まれない）
+  if((S.tpg[eg.id]||0)>=eg.th){
+    S.tpg[eg.id]=0; // 余剰ダメージは破棄
+    hatch(eg);
+    S._hatchCount=(S._hatchCount||0)+1;
+    try{checkSuperEgg();}catch(e){}
+    try{checkHatchMilestone();}catch(e){}
+    const now2=Date.now();
+    if(S._lastHatchTime){
+      const t=now2-S._lastHatchTime;
+      if(!S._recFastHatch||t<S._recFastHatch)S._recFastHatch=t;
+    }
+    S._lastHatchTime=Date.now();
   }
   updateRecords();
   try{checkRhythm();}catch(e){}
@@ -1471,15 +1429,14 @@ function prestigeReq(){
   const count=[300,800,2000,5000,12000,30000][Math.min(S.pc,5)];
   return {kinds, count};
 }
-function calcC(){return Math.max(1,Math.floor(Math.sqrt(Math.max(tC()-10,0)/18)));}
+function calcC(){return Math.floor(Math.sqrt(Math.max(tC()-5,0)/14));}
 function nextCMilestone(){
-  // 次にコア結晶+1になる必要匹数
+  // 次にコア結晶+1になる必要匹数（calcC と同じ式で計算）
   const cur=calcC();
-  // 二分探索的に探す（単調増加なのでシンプル線形）
   let n=tC();
   for(let i=0;i<5000;i++){
     n++;
-    const c=Math.max(1,Math.floor(Math.sqrt(Math.max(n-10,0)/20)));
+    const c=Math.floor(Math.sqrt(Math.max(n-5,0)/14));
     if(c>cur)return n-tC();
   }
   return null;
@@ -2845,11 +2802,13 @@ setInterval(()=>{
       const _netDmgAuto=getNetDmg(_eg);
       if(_netDmgAuto>0){
         S.tpg[_eg.id]=(S.tpg[_eg.id]||0)+_netDmgAuto*0.05;
-        while((S.tpg[_eg.id]||0)>=_eg.th){
-          S.tpg[_eg.id]-=_eg.th;
+        // 自動孵化も1ティックで1体だけ
+        if((S.tpg[_eg.id]||0)>=_eg.th){
+          S.tpg[_eg.id]=0;
           hatch(_eg);
           S._hatchCount=(S._hatchCount||0)+1;
           try{checkSuperEgg();}catch(e){}
+          try{checkHatchMilestone();}catch(e){}
         }
       }
     }
@@ -2859,53 +2818,16 @@ setInterval(()=>{
 },100);
 
 loadGame();
-// 音声初期化は「最初のユーザー操作」まで遅延（自動作成すると Android でブチッと鳴る）
+// HTMLAudioElement 方式：ユーザー操作で1度だけ initBufs を実行（Android の autoplay 制限対応）
 function _firstAudioInit(){
   document.removeEventListener('touchstart',_firstAudioInit,{capture:true});
   document.removeEventListener('mousedown',_firstAudioInit,{capture:true});
   document.removeEventListener('pointerdown',_firstAudioInit,{capture:true});
-  try{
-    if(!audioCtx){
-      audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    }
-    if(audioCtx.state==='suspended')audioCtx.resume();
-    // 長めのウォームアップで Android のオーディオ出力をスムーズに開く
-    warmUpAudio();
-    // バッファ生成（先送り、warmup 中に並行）
-    setTimeout(()=>{try{initBufs();}catch(e){}},50);
-  }catch(e){}
+  try{initBufs();}catch(e){}
 }
 document.addEventListener('touchstart',_firstAudioInit,{passive:true,capture:true});
 document.addEventListener('mousedown',_firstAudioInit,{passive:true,capture:true});
 document.addEventListener('pointerdown',_firstAudioInit,{passive:true,capture:true});
-
-// バックグラウンド/フォアグラウンド遷移
-document.addEventListener('visibilitychange',()=>{
-  if(!audioCtx)return;
-  if(document.hidden){
-    // バックグラウンド時：環境ループを止めて、AudioContext を suspend
-    stopAmbientLoop();
-    try{audioCtx.suspend();}catch(e){}
-  } else {
-    // フォアグラウンド復帰時：すぐ音を出さず、次のユーザー操作で再開
-    _audioReadyTime=Date.now()+800;
-    if(audioCtx.state==='suspended'){
-      const _resume=()=>{
-        document.removeEventListener('touchstart',_resume,{capture:true});
-        document.removeEventListener('pointerdown',_resume,{capture:true});
-        try{
-          audioCtx.resume().then(()=>{
-            // 再ウォームアップ＆環境ループ再開
-            _audioWarmedUp=false;
-            warmUpAudio();
-          });
-        }catch(e){}
-      };
-      document.addEventListener('touchstart',_resume,{passive:true,capture:true,once:true});
-      document.addEventListener('pointerdown',_resume,{passive:true,capture:true,once:true});
-    }
-  }
-});
 // ちびドラゴンは最初から1匹
 if(!S.cr['chibi_dragon'])S.cr['chibi_dragon']=1;
 setTimeout(()=>{if(!tutDone)tutStart();},800);
