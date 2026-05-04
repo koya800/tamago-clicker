@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Feature Graphic 生成 — タマゴクリッカー</title>
+<style>
+body{font-family:'Hiragino Kaku Gothic ProN',sans-serif;padding:20px;text-align:center;background:#fff8fd;}
+h1{color:#ff6eb4}
+canvas{border:2px solid #ddd;border-radius:8px;display:block;margin:14px auto;max-width:100%;height:auto}
+button{padding:14px 28px;margin:8px;font-size:15px;font-weight:bold;background:#ff6eb4;color:white;border:none;border-radius:10px;cursor:pointer}
+button:hover{background:#ff3399}
+.note{background:#fffaee;padding:14px;border-radius:8px;border:1.5px solid #ffd6a0;margin:18px auto;max-width:540px;text-align:left;font-size:13px;line-height:1.7}
+.box{display:inline-block;background:white;padding:18px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.1);margin:12px}
+</style>
+</head>
+<body>
+<h1>🎨 Feature Graphic（1024×500）生成</h1>
+
+<div class="note">
+<b>使い方:</b><br>
+1️⃣ プレビューが表示されたら、好みのデザインを選んで<br>
+2️⃣ 「⬇ ダウンロード」ボタンを押す<br>
+3️⃣ ダウンロードフォルダに <code>feature-graphic.png</code> が落ちる<br>
+4️⃣ Play Console のストア掲載情報でアップロード<br>
+※ サイズは Google Play の要件 1024 × 500 ピクセル
+</div>
+
+<div class="box">
+<h3>デザイン A: メインビジュアル</h3>
+<canvas id="c1" width="1024" height="500"></canvas>
+<button onclick="dl('c1','feature-graphic-A.png')">⬇ デザイン A をダウンロード</button>
+</div>
+
+<div class="box">
+<h3>デザイン B: シンプル中央</h3>
+<canvas id="c2" width="1024" height="500"></canvas>
+<button onclick="dl('c2','feature-graphic-B.png')">⬇ デザイン B をダウンロード</button>
+</div>
+
+<script>
+function drawA(){
+  const c=document.getElementById('c1'),g=c.getContext('2d');
+  // 背景グラデーション
+  const bg=g.createLinearGradient(0,0,1024,500);
+  bg.addColorStop(0,'#ffe5f4');bg.addColorStop(0.5,'#ffd0e8');bg.addColorStop(1,'#ffc4e0');
+  g.fillStyle=bg;g.fillRect(0,0,1024,500);
+  // 装飾の星
+  for(let i=0;i<40;i++){
+    const x=Math.random()*1024,y=Math.random()*500,s=Math.random()*16+6;
+    g.font=s+'px sans-serif';g.fillStyle='rgba(255,255,255,'+(Math.random()*0.7+0.3)+')';
+    g.fillText(['✨','⭐','🌸','💫','🌟'][Math.floor(Math.random()*5)],x,y);
+  }
+  // 大きい卵（中央左）
+  const eggX=300,eggY=260;
+  g.save();
+  g.translate(eggX,eggY);
+  // 影
+  g.beginPath();g.ellipse(0,170,160,18,0,0,Math.PI*2);
+  g.fillStyle='rgba(180,80,140,0.25)';g.fill();
+  // 卵本体
+  const eg=g.createLinearGradient(-130,-160,130,160);
+  eg.addColorStop(0,'#fff0f8');eg.addColorStop(1,'#ffb6e8');
+  g.beginPath();g.ellipse(0,0,140,170,0,0,Math.PI*2);g.fillStyle=eg;g.fill();
+  g.lineWidth=8;g.strokeStyle='#ff9de2';g.stroke();
+  // ハイライト
+  g.beginPath();g.ellipse(-50,-70,30,18,-0.5,0,Math.PI*2);
+  g.fillStyle='rgba(255,255,255,0.7)';g.fill();
+  // ヒビ
+  g.lineWidth=4;g.strokeStyle='#ff5599';g.beginPath();
+  g.moveTo(-30,-40);g.lineTo(-15,-20);g.lineTo(-25,0);g.lineTo(-5,15);g.lineTo(-15,40);
+  g.stroke();
+  g.restore();
+
+  // タイトル
+  g.font='bold 78px "Hiragino Kaku Gothic ProN","Meiryo",sans-serif';
+  g.fillStyle='#fff';g.strokeStyle='#ff3399';g.lineWidth=10;g.lineJoin='round';
+  g.strokeText('タマゴクリッカー',520,200);g.fillText('タマゴクリッカー',520,200);
+  // タグライン
+  g.font='bold 32px sans-serif';
+  g.fillStyle='#fff';g.strokeStyle='#c04080';g.lineWidth=6;
+  g.strokeText('🥚 ぽちぽち、いきものを集めよう',520,260);
+  g.fillText('🥚 ぽちぽち、いきものを集めよう',520,260);
+  // 特徴バブル
+  const bubbles=[
+    {emoji:'🐣',x:540,y:340},{emoji:'🦄',x:620,y:380},{emoji:'🐲',x:700,y:340},
+    {emoji:'🦊',x:780,y:380},{emoji:'🐻',x:860,y:340},{emoji:'🌸',x:940,y:380}
+  ];
+  bubbles.forEach(b=>{
+    g.beginPath();g.arc(b.x,b.y,32,0,Math.PI*2);
+    g.fillStyle='rgba(255,255,255,0.9)';g.fill();
+    g.lineWidth=3;g.strokeStyle='#ff9de2';g.stroke();
+    g.font='38px sans-serif';g.textAlign='center';g.textBaseline='middle';
+    g.fillText(b.emoji,b.x,b.y);
+    g.textAlign='start';g.textBaseline='alphabetic';
+  });
+  // 角の装飾
+  g.font='bold 22px sans-serif';
+  g.fillStyle='#fff';g.strokeStyle='#c04080';g.lineWidth=4;
+  g.strokeText('100種類以上の仲間',540,440);g.fillText('100種類以上の仲間',540,440);
+}
+
+function drawB(){
+  const c=document.getElementById('c2'),g=c.getContext('2d');
+  // 背景: 縦グラデ＋虹色アクセント
+  const bg=g.createLinearGradient(0,0,0,500);
+  bg.addColorStop(0,'#fff8fd');bg.addColorStop(1,'#ffd6f0');
+  g.fillStyle=bg;g.fillRect(0,0,1024,500);
+
+  // 上部に虹アーク
+  const ra=g.createLinearGradient(0,0,1024,0);
+  ['#ff9de2','#ffb347','#ffe066','#80e0a0','#80d8ff','#c090ff'].forEach((c2,i,a)=>{
+    ra.addColorStop(i/(a.length-1),c2);
+  });
+  g.fillStyle=ra;g.globalAlpha=0.4;
+  g.fillRect(0,0,1024,40);
+  g.globalAlpha=1;
+
+  // 大きな卵を中央
+  const eggX=512,eggY=290;
+  g.save();
+  g.translate(eggX,eggY);
+  g.beginPath();g.ellipse(0,180,180,20,0,0,Math.PI*2);
+  g.fillStyle='rgba(180,80,140,0.2)';g.fill();
+  const eg=g.createLinearGradient(-140,-160,140,160);
+  eg.addColorStop(0,'#fff0f8');eg.addColorStop(1,'#ff9de2');
+  g.beginPath();g.ellipse(0,0,150,180,0,0,Math.PI*2);g.fillStyle=eg;g.fill();
+  g.lineWidth=10;g.strokeStyle='#ff5599';g.stroke();
+  g.beginPath();g.ellipse(-55,-80,33,20,-0.5,0,Math.PI*2);
+  g.fillStyle='rgba(255,255,255,0.8)';g.fill();
+  g.restore();
+
+  // タイトル左上
+  g.font='bold 92px "Hiragino Kaku Gothic ProN",sans-serif';
+  g.fillStyle='#ff3399';g.strokeStyle='#fff';g.lineWidth=8;g.lineJoin='round';
+  g.strokeText('タマゴ',60,200);g.fillText('タマゴ',60,200);
+  g.font='bold 64px "Hiragino Kaku Gothic ProN",sans-serif';
+  g.strokeText('クリッカー',60,280);g.fillText('クリッカー',60,280);
+  // タグライン
+  g.font='bold 28px sans-serif';g.fillStyle='#c04080';
+  g.fillText('卵をタップして',60,340);
+  g.fillText('生き物を集めよう！',60,376);
+
+  // 右側にキャラ群
+  const chars=['🐲','🐱','🦄','🦊','🐺','🦉','🦁','🐯','🐰','🐧'];
+  chars.forEach((ch,i)=>{
+    const angle=(i/chars.length)*Math.PI*2-Math.PI/2;
+    const x=850+Math.cos(angle)*120;
+    const y=250+Math.sin(angle)*120;
+    g.beginPath();g.arc(x,y,30,0,Math.PI*2);
+    g.fillStyle='white';g.fill();
+    g.lineWidth=3;g.strokeStyle='#ffb6e8';g.stroke();
+    g.font='38px sans-serif';g.textAlign='center';g.textBaseline='middle';
+    g.fillText(ch,x,y);
+    g.textAlign='start';g.textBaseline='alphabetic';
+  });
+
+  // 下部の特徴
+  g.font='bold 20px sans-serif';
+  g.fillStyle='rgba(192,64,128,0.8)';
+  g.fillText('🌟 100種類以上のキャラ  ✨ 隠し要素満載  💖 完全無料 広告なし',60,460);
+}
+
+function dl(canvasId,filename){
+  const c=document.getElementById(canvasId);
+  c.toBlob(blob=>{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;a.click();
+    URL.revokeObjectURL(url);
+  },'image/png',1.0);
+}
+
+drawA();drawB();
+</script>
+</body>
+</html>
