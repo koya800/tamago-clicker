@@ -1170,7 +1170,7 @@ function checkHatchMilestone(){
 }
 
 // ===== アプリバージョン =====
-const APP_VERSION='1.1.1'; // 更新ごとに+1
+const APP_VERSION='1.1.2'; // 更新ごとに+1
 const APP_BUILD_DATE='2026-05-04'; // ビルド日
 
 // ===== ゲーム状態 =====
@@ -2912,20 +2912,26 @@ function watchAd(type){
   const today=new Date().toDateString();
   if(_adDate!==today){_adCount=0;_adDate=today;}
   if(_adCount>=3){showN('📺 今日の広告は終わりだよ！また明日ね');return;}
-  // GameMonetize SDK が使えるなら本物の広告を出す
+  // 1. ネイティブ Android アプリの AdMob ブリッジ（最優先）
+  if(window.AndroidAdMob&&typeof window.AndroidAdMob.showRewardedAd==='function'){
+    window._adRewardCb=()=>_grantAdReward(type);
+    try{
+      window.AndroidAdMob.showRewardedAd(type);
+      showN('📺 広告を読み込み中…');
+    }catch(e){_showFakeAd(type);}
+    return;
+  }
+  // 2. GameMonetize SDK（Web版）
   const sdkReady=window.sdk&&typeof window.sdk.showBanner==='function'&&window.SDK_OPTIONS&&window.SDK_OPTIONS.gameId&&window.SDK_OPTIONS.gameId!=='YOUR_GAME_ID_HERE';
   if(sdkReady){
     window._adRewardCb=()=>_grantAdReward(type);
     try{
       window.sdk.showBanner();
       showN('📺 広告を読み込み中…');
-    }catch(e){
-      // SDK エラー時はフォールバック
-      _showFakeAd(type);
-    }
+    }catch(e){_showFakeAd(type);}
     return;
   }
-  // フォールバック：シミュレート広告（SDK未設定／ネット切断時）
+  // 3. フォールバック（SDK未設定・ネット切断時）
   _showFakeAd(type);
 }
 function _showFakeAd(type){

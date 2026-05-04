@@ -1,4 +1,4 @@
-const CACHE='tamago-v11';
+const CACHE='tamago-v12';
 const FILES=[
   './',
   './index.html',
