@@ -688,28 +688,38 @@ function getACtx(){
   return audioCtx;
 }
 
-// 初回タップ時にオーディオ出力を「温める」無音バッファ
-// （Androidでオーディオハードが起動する際のブチ音を吸収する）
+// 初回タップ時にオーディオ出力を「温める」フェード付きノイズ
+// （Android のオーディオハード起動時のブチ音を吸収）
 let _audioWarmedUp=false;
+let _audioReadyTime=0; // この時刻以降に sound 再生を許可
 function warmUpAudio(){
   if(_audioWarmedUp)return;
   _audioWarmedUp=true;
   try{
     const ctx=getACtx();
     const sr=ctx.sampleRate;
-    const len=Math.floor(sr*0.25); // 250ms の無音
+    const dur=0.7; // 700ms（しっかり温める）
+    const len=Math.floor(sr*dur);
     const buf=ctx.createBuffer(1,len,sr);
-    // 中身は全部ゼロ（無音）。createBuffer したものはデフォルトでゼロ埋め。
+    const data=buf.getChannelData(0);
+    // フェードイン/アウト付きの極小ローパスノイズで、出力デバイスをじわっと開ける
+    let smooth=0;
+    for(let i=0;i<len;i++){
+      const t=i/sr;
+      const fadeIn=Math.min(t*4,1); // 250ms かけてフェードイン
+      const fadeOut=Math.max(0,Math.min((dur-t)*4,1)); // 250ms かけてフェードアウト
+      const noise=Math.random()*2-1;
+      smooth=smooth*0.97+noise*0.03; // ローパス（高域カット）
+      data[i]=smooth*0.0025*fadeIn*fadeOut; // ほぼ聞こえない音量
+    }
     const src=ctx.createBufferSource();
-    const g=ctx.createGain();
     src.buffer=buf;
-    src.connect(g);g.connect(ctx.destination);
-    g.gain.value=0.0001;
-    const t=ctx.currentTime;
-    src.start(t);
-    src.stop(t+0.25);
-    src.onended=()=>{try{src.disconnect();g.disconnect();}catch(e){}};
-  }catch(e){}
+    src.connect(ctx.destination);
+    src.start(ctx.currentTime);
+    src.onended=()=>{try{src.disconnect();}catch(e){}};
+    // ウォームアップ完了予定時刻 + 50ms マージン
+    _audioReadyTime=Date.now()+(dur*1000)+50;
+  }catch(e){_audioReadyTime=Date.now();}
 }
 
 // 波形をバッファに事前生成
@@ -746,6 +756,8 @@ function playBuf(buf){
   if(!seEnabled||!buf)return;
   if(_activeSounds>2)return; // 同時再生数制限を厳しく（クリック音重なり防止）
   warmUpAudio(); // 初回のみ無音バッファでオーディオ出力を起動
+  // ウォームアップ完了前のサウンドは破棄（ブチッ音回避）
+  if(_audioReadyTime===0||Date.now()<_audioReadyTime)return;
   try{
     const ctx=getACtx();
     const src=ctx.createBufferSource();
@@ -2802,15 +2814,25 @@ setInterval(()=>{
 },100);
 
 loadGame();
-// 音声バッファを事前初期化（最初のタップでブツッとならないように）
-setTimeout(()=>{
+// 音声初期化は「最初のユーザー操作」まで遅延（自動作成すると Android でブチッと鳴る）
+function _firstAudioInit(){
+  document.removeEventListener('touchstart',_firstAudioInit,{capture:true});
+  document.removeEventListener('mousedown',_firstAudioInit,{capture:true});
+  document.removeEventListener('pointerdown',_firstAudioInit,{capture:true});
   try{
-    const _ctx=new(window.AudioContext||window.webkitAudioContext)();
-    _ctx.suspend(); // 一旦サスペンド
-    audioCtx=_ctx;
-    initBufs(); // バッファを事前生成
+    if(!audioCtx){
+      audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    }
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    // 長めのウォームアップで Android のオーディオ出力をスムーズに開く
+    warmUpAudio();
+    // バッファ生成（先送り、warmup 中に並行）
+    setTimeout(()=>{try{initBufs();}catch(e){}},50);
   }catch(e){}
-},500);
+}
+document.addEventListener('touchstart',_firstAudioInit,{passive:true,capture:true});
+document.addEventListener('mousedown',_firstAudioInit,{passive:true,capture:true});
+document.addEventListener('pointerdown',_firstAudioInit,{passive:true,capture:true});
 // ちびドラゴンは最初から1匹
 if(!S.cr['chibi_dragon'])S.cr['chibi_dragon']=1;
 setTimeout(()=>{if(!tutDone)tutStart();},800);
