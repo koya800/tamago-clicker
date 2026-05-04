@@ -707,13 +707,14 @@ function warmUpAudio(){
 }
 
 // 波形をバッファに事前生成
-function makeBuffer(freqs,durSec){
+function makeBuffer(freqs,durSec,amp){
   try{
     const ctx=getACtx();
     const sr=ctx.sampleRate;
     const len=Math.floor(sr*durSec);
     const buf=ctx.createBuffer(1,len,sr);
     const data=buf.getChannelData(0);
+    const _amp=amp||0.3;
     for(let i=0;i<len;i++){
       const t=i/sr;
       const attack=Math.min(t*200,1); // 素早いattack
@@ -721,7 +722,7 @@ function makeBuffer(freqs,durSec){
       const env=attack*decay;
       let s=0;
       freqs.forEach(f=>{s+=Math.sin(2*Math.PI*f*t);});
-      data[i]=(s/freqs.length)*env*0.3;
+      data[i]=(s/freqs.length)*env*_amp;
     }
     // 末尾20msを完全ゼロへ（プチプチ防止）
     const fade=Math.floor(sr*0.02);
@@ -770,7 +771,7 @@ function initBufs(){
   if(_bufsReady)return;
   _bufsReady=true;
   try{
-    _buffers.tap=makeBuffer([440],0.08);
+    _buffers.tap=makeBuffer([440],0.08,0.6);  // タップ音は強め（卵を叩く感じ）
     _buffers.hatch=makeBuffer([523,659],0.15);
     _buffers.rare=makeBuffer([523,659,784,1047],0.4);
     _buffers.legend=makeBuffer([523,659,784,880,1047],0.6);

@@ -1,14 +1,17 @@
-const CACHE='tamago-v3';
+const CACHE='tamago-v4';
 const FILES=[
-  './tamago_clicker.html',
+  './',
+  './index.html',
   './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
   './icon-192.svg',
   './icon-512.svg',
 ];
 
 self.addEventListener('install',e=>{
   e.waitUntil(
-    caches.open(CACHE).then(cache=>cache.addAll(FILES))
+    caches.open(CACHE).then(cache=>cache.addAll(FILES).catch(()=>{}))
   );
   self.skipWaiting();
 });
