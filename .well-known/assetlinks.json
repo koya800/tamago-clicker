@@ -1,1 +1,8 @@
-[]
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.koya800.tamagoclicker",
+    "sha256_cert_fingerprints": ["1A:92:A1:10:73:27:98:27:A3:7E:B1:89:7F:80:9D:39:AC:B9:17:F9:8F:80:B2:CA:D0:0B:95:4E:17:34:A1:9E"]
+  }
+}]
