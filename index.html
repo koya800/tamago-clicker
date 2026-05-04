@@ -692,33 +692,71 @@ function getACtx(){
 // （Android のオーディオハード起動時のブチ音を吸収）
 let _audioWarmedUp=false;
 let _audioReadyTime=0; // この時刻以降に sound 再生を許可
+let _ambientLoop=null;  // 連続無音ループ（オーディオ出力を常時オン）
+
+// オーディオ出力を「常時オン」状態に保つ連続ループ
+// これにより、音と音の合間にも出力デバイスが電源OFFにならず、ブチ音を防ぐ
+function startAmbientLoop(){
+  if(_ambientLoop)return;
+  try{
+    const ctx=getACtx();
+    const sr=ctx.sampleRate;
+    const len=Math.floor(sr*5); // 5秒のループ
+    const buf=ctx.createBuffer(1,len,sr);
+    const data=buf.getChannelData(0);
+    // 超低周波（人間にほぼ聞こえない 18Hz）の極小サイン波
+    // → 出力デバイスは「音を出してる」と認識して開きっぱなしになる
+    for(let i=0;i<len;i++){
+      const t=i/sr;
+      data[i]=Math.sin(2*Math.PI*18*t)*0.0008;
+    }
+    const src=ctx.createBufferSource();
+    src.buffer=buf;
+    src.loop=true;
+    const g=ctx.createGain();
+    g.gain.value=1;
+    src.connect(g);g.connect(ctx.destination);
+    src.start(ctx.currentTime);
+    _ambientLoop=src;
+  }catch(e){}
+}
+
+function stopAmbientLoop(){
+  if(!_ambientLoop)return;
+  try{_ambientLoop.stop();_ambientLoop.disconnect();}catch(e){}
+  _ambientLoop=null;
+}
+
 function warmUpAudio(){
   if(_audioWarmedUp)return;
   _audioWarmedUp=true;
   try{
     const ctx=getACtx();
     const sr=ctx.sampleRate;
-    const dur=0.7; // 700ms（しっかり温める）
+    const dur=0.5; // 500ms（出力デバイスが安定するまで）
     const len=Math.floor(sr*dur);
     const buf=ctx.createBuffer(1,len,sr);
     const data=buf.getChannelData(0);
-    // フェードイン/アウト付きの極小ローパスノイズで、出力デバイスをじわっと開ける
+    // フェードイン付きの極小ローパスノイズで、出力デバイスをじわっと開ける
     let smooth=0;
     for(let i=0;i<len;i++){
       const t=i/sr;
-      const fadeIn=Math.min(t*4,1); // 250ms かけてフェードイン
-      const fadeOut=Math.max(0,Math.min((dur-t)*4,1)); // 250ms かけてフェードアウト
+      const fadeIn=Math.min(t*5,1); // 200ms フェードイン
+      const fadeOut=Math.max(0,Math.min((dur-t)*5,1));
       const noise=Math.random()*2-1;
-      smooth=smooth*0.97+noise*0.03; // ローパス（高域カット）
-      data[i]=smooth*0.0025*fadeIn*fadeOut; // ほぼ聞こえない音量
+      smooth=smooth*0.97+noise*0.03;
+      data[i]=smooth*0.003*fadeIn*fadeOut;
     }
     const src=ctx.createBufferSource();
     src.buffer=buf;
     src.connect(ctx.destination);
     src.start(ctx.currentTime);
-    src.onended=()=>{try{src.disconnect();}catch(e){}};
-    // ウォームアップ完了予定時刻 + 50ms マージン
-    _audioReadyTime=Date.now()+(dur*1000)+50;
+    src.onended=()=>{
+      try{src.disconnect();}catch(e){}
+      // ウォームアップ完了後、連続ループを開始
+      startAmbientLoop();
+    };
+    _audioReadyTime=Date.now()+(dur*1000)+30;
   }catch(e){_audioReadyTime=Date.now();}
 }
 
@@ -754,28 +792,29 @@ function makeBuffer(freqs,durSec,amp){
 let _activeSounds=0;
 function playBuf(buf){
   if(!seEnabled||!buf)return;
-  if(_activeSounds>2)return; // 同時再生数制限を厳しく（クリック音重なり防止）
-  warmUpAudio(); // 初回のみ無音バッファでオーディオ出力を起動
+  if(_activeSounds>2)return; // 同時再生数制限を厳しく
+  warmUpAudio(); // 初回のみ実行
   // ウォームアップ完了前のサウンドは破棄（ブチッ音回避）
   if(_audioReadyTime===0||Date.now()<_audioReadyTime)return;
   try{
     const ctx=getACtx();
     const src=ctx.createBufferSource();
     const g=ctx.createGain();
+    g.gain.value=0; // ★明示的に0で開始（GainNodeのデフォルト1から始まる微小グリッチ防止）
     src.buffer=buf;
     src.connect(g);
     g.connect(ctx.destination);
     const now=ctx.currentTime;
-    const fade=0.03; // 30ms（Androidで安全側に長めのフェード）
-    // バッファ duration が短くても安全に
+    const startAt=now+0.008; // 8ms 先送り（オーディオエンジンに準備時間を与える）
+    const fade=0.04; // 40ms フェード（じっくり）
     const safeFade=Math.min(fade,buf.duration*0.4);
-    g.gain.setValueAtTime(0,now);
-    g.gain.linearRampToValueAtTime(seVol,now+safeFade);
-    g.gain.setValueAtTime(seVol,now+buf.duration-safeFade);
-    g.gain.linearRampToValueAtTime(0,now+buf.duration);
+    g.gain.setValueAtTime(0,startAt);
+    g.gain.linearRampToValueAtTime(seVol,startAt+safeFade);
+    g.gain.setValueAtTime(seVol,startAt+buf.duration-safeFade);
+    g.gain.linearRampToValueAtTime(0,startAt+buf.duration);
     _activeSounds++;
-    src.start(now);
-    src.stop(now+buf.duration);
+    src.start(startAt);
+    src.stop(startAt+buf.duration);
     src.onended=()=>{
       _activeSounds=Math.max(0,_activeSounds-1);
       try{src.disconnect();g.disconnect();}catch(e){}
@@ -1155,7 +1194,7 @@ function checkHatchMilestone(){
 }
 
 // ===== アプリバージョン =====
-const APP_VERSION='1.0.7'; // 更新ごとに+1
+const APP_VERSION='1.0.8'; // 更新ごとに+1
 const APP_BUILD_DATE='2026-05-04'; // ビルド日
 
 // ===== ゲーム状態 =====
@@ -2840,27 +2879,26 @@ document.addEventListener('touchstart',_firstAudioInit,{passive:true,capture:tru
 document.addEventListener('mousedown',_firstAudioInit,{passive:true,capture:true});
 document.addEventListener('pointerdown',_firstAudioInit,{passive:true,capture:true});
 
-// バックグラウンドから復帰時：AudioContext を suspend して、次のユーザー操作まで音を止める
-// （他アプリ（YouTube等）からの復帰時のクリック音を防ぐ）
+// バックグラウンド/フォアグラウンド遷移
 document.addEventListener('visibilitychange',()=>{
   if(!audioCtx)return;
   if(document.hidden){
-    // バックグラウンド時は AudioContext を suspend
+    // バックグラウンド時：環境ループを止めて、AudioContext を suspend
+    stopAmbientLoop();
     try{audioCtx.suspend();}catch(e){}
   } else {
-    // フォアグラウンド復帰時：すぐ resume せず、ウォームアップ準備状態に戻す
-    _audioReadyTime=Date.now()+800; // 復帰後800ms は無音
-    // 軽い再ウォームアップ（再開時のクリック対策）
+    // フォアグラウンド復帰時：すぐ音を出さず、次のユーザー操作で再開
+    _audioReadyTime=Date.now()+800;
     if(audioCtx.state==='suspended'){
-      // 次のユーザー操作で再開
       const _resume=()=>{
         document.removeEventListener('touchstart',_resume,{capture:true});
         document.removeEventListener('pointerdown',_resume,{capture:true});
         try{
-          audioCtx.resume();
-          // 再ウォームアップ
-          _audioWarmedUp=false;
-          warmUpAudio();
+          audioCtx.resume().then(()=>{
+            // 再ウォームアップ＆環境ループ再開
+            _audioWarmedUp=false;
+            warmUpAudio();
+          });
         }catch(e){}
       };
       document.addEventListener('touchstart',_resume,{passive:true,capture:true,once:true});
