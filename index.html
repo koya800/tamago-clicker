@@ -771,7 +771,7 @@ function initBufs(){
   if(_bufsReady)return;
   _bufsReady=true;
   try{
-    _buffers.tap=makeBuffer([440],0.08,0.6);  // タップ音は強め（卵を叩く感じ）
+    _buffers.tap=makeBuffer([440],0.08,0.9);  // タップ音は強め（卵を叩く感じ）
     _buffers.hatch=makeBuffer([523,659],0.15);
     _buffers.rare=makeBuffer([523,659,784,1047],0.4);
     _buffers.legend=makeBuffer([523,659,784,880,1047],0.6);
@@ -1410,7 +1410,7 @@ function prestigeReq(){
   const count=[300,800,2000,5000,12000,30000][Math.min(S.pc,5)];
   return {kinds, count};
 }
-function calcC(){return Math.max(1,Math.floor(Math.sqrt(Math.max(tC()-15,0)/25)));}
+function calcC(){return Math.max(1,Math.floor(Math.sqrt(Math.max(tC()-10,0)/18)));}
 function nextCMilestone(){
   // 次にコア結晶+1になる必要匹数
   const cur=calcC();
