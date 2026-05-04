@@ -12,6 +12,23 @@
 <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=M+PLUS+Rounded+1c:wght@700;900&display=swap" rel="stylesheet">
+<!-- ===== GameMonetize SDK ===== -->
+<!-- ⚠ gamemonetize.com で登録して、下の YOUR_GAME_ID_HERE を実際のIDに置き換えてください -->
+<script>
+window.SDK_OPTIONS={
+  gameId:'YOUR_GAME_ID_HERE',
+  onEvent:function(e){
+    try{
+      if(e.name==='SDK_GAME_PAUSE'){window._adPlaying=true;}
+      if(e.name==='SDK_GAME_START'){window._adPlaying=false;}
+      if(e.name==='SDK_REWARDED_WATCH_COMPLETE'){
+        if(typeof window._adRewardCb==='function'){window._adRewardCb();window._adRewardCb=null;}
+      }
+    }catch(err){}
+  }
+};
+(function(a,b,c){var d=a.getElementsByTagName(b)[0];a.getElementById(c)||(a=a.createElement(b),a.id=c,a.src='https://api.gamemonetize.com/sdk.js',d.parentNode.insertBefore(a,d));}(document,'script','gamemonetize-sdk'));
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 :root{--pk:#ff6eb4;--pkm:#ffb6e8;--pu:#b06ee0;--or:#ff8c42;--gd:#f5c518;}
@@ -255,7 +272,7 @@ body{font-family:'Nunito','Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji
       </div>
       <div class="card" style="border-color:#ffd700;background:linear-gradient(135deg,#fffdf0,#fff8e0)">
         <div class="ct" style="color:#b08000">🎬 広告を見てボーナスゲット！</div>
-        <div style="font-size:10px;color:#bbb;margin:-4px 0 8px">1日3回まで無料で視聴できます</div>
+        <div style="font-size:10px;color:#888;margin:-4px 0 8px">1日3回まで視聴可能。広告収益は開発の継続に使われます🙏</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <div onclick="watchAd('short')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:white;border-radius:13px;border:2px solid #ffe0a0;cursor:pointer;touch-action:manipulation">
             <div style="display:flex;align-items:center;gap:10px">
@@ -1153,7 +1170,7 @@ function checkHatchMilestone(){
 }
 
 // ===== アプリバージョン =====
-const APP_VERSION='1.1.0'; // 更新ごとに+1
+const APP_VERSION='1.1.1'; // 更新ごとに+1
 const APP_BUILD_DATE='2026-05-04'; // ビルド日
 
 // ===== ゲーム状態 =====
@@ -2882,15 +2899,39 @@ setTimeout(()=>{try{showOfflineModal();}catch(e){}},600);
 
 
 let _adCount=0,_adDate='';
+function _grantAdReward(type){
+  const mult=type==='short'?2:4;
+  const dur=type==='short'?60:180;
+  _adCount++;
+  S.tp*=mult;
+  showN('🎬 広告完了！タップ×'+mult+'倍（'+dur+'秒間）！');
+  render();
+  setTimeout(()=>{S.tp/=mult;showN('⏰ タップボーナス終了');render();},dur*1000);
+}
 function watchAd(type){
   const today=new Date().toDateString();
   if(_adDate!==today){_adCount=0;_adDate=today;}
   if(_adCount>=3){showN('📺 今日の広告は終わりだよ！また明日ね');return;}
+  // GameMonetize SDK が使えるなら本物の広告を出す
+  const sdkReady=window.sdk&&typeof window.sdk.showBanner==='function'&&window.SDK_OPTIONS&&window.SDK_OPTIONS.gameId&&window.SDK_OPTIONS.gameId!=='YOUR_GAME_ID_HERE';
+  if(sdkReady){
+    window._adRewardCb=()=>_grantAdReward(type);
+    try{
+      window.sdk.showBanner();
+      showN('📺 広告を読み込み中…');
+    }catch(e){
+      // SDK エラー時はフォールバック
+      _showFakeAd(type);
+    }
+    return;
+  }
+  // フォールバック：シミュレート広告（SDK未設定／ネット切断時）
+  _showFakeAd(type);
+}
+function _showFakeAd(type){
   const sec=type==='short'?15:30;
-  const mult=type==='short'?2:4;
-  const dur=type==='short'?60:180; // 効果時間（秒）
   const modal=document.getElementById('ad-modal');
-  if(!modal)return;
+  if(!modal){_grantAdReward(type);return;}
   modal.style.display='flex';
   let t=sec;
   document.getElementById('ad-cnt').textContent=t;
@@ -2901,13 +2942,7 @@ function watchAd(type){
     if(t<=0){
       clearInterval(timer);
       modal.style.display='none';
-      _adCount++;
-      // タップ倍率を一時的にアップ
-      S.tp*=mult;
-      showN('🎬 広告完了！タップ×'+mult+'倍（'+dur+'秒間）！');
-      render();
-      // 効果時間後に元に戻す
-      setTimeout(()=>{S.tp/=mult;showN('⏰ タップボーナス終了');render();},dur*1000);
+      _grantAdReward(type);
     }
   },1000);
 }
